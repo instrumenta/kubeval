@@ -1,0 +1,5 @@
+package: github.com/garethr/kubeval
+import:
+- package: github.com/spf13/cobra
+- package: github.com/xeipuuv/gojsonschema
+- package: gopkg.in/yaml.v2
