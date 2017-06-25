@@ -1,6 +1,8 @@
-hash: 59c28b5249d1f47412e4cb9a04e01cda7fb3f19221a07a12efab040cfa3ce25f
-updated: 2017-06-25T15:14:18.709145537+01:00
+hash: bae7942ce953957f11533a8509b412e748b6a62c53c50c4bca884a8de82b9252
+updated: 2017-06-25T18:32:42.484262971+01:00
 imports:
+- name: github.com/fatih/color
+  version: 570b54cabe6b8eb0bc2dfce68d964677d63b5260
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/spf13/cobra

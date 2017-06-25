@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/xeipuuv/gojsonschema"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/xeipuuv/gojsonschema"
+	"gopkg.in/yaml.v2"
 )
 
 var Version string
@@ -20,6 +21,25 @@ type ValidFormat struct{}
 // Ensure it meets the gojsonschema.FormatChecker interface
 func (f ValidFormat) IsFormat(input string) bool {
 	return true
+}
+
+func info(message ...interface{}) {
+	fmt.Println(message...)
+}
+
+func success(message ...interface{}) {
+	green := color.New(color.FgGreen)
+	green.Println(message...)
+}
+
+func warn(message ...interface{}) {
+	yellow := color.New(color.FgYellow)
+	yellow.Println(message...)
+}
+
+func error(message ...interface{}) {
+	red := color.New(color.FgRed)
+	red.Println(message...)
 }
 
 // Based on https://stackoverflow.com/questions/40737122/convert-yaml-to-json-without-struct-golang
@@ -46,41 +66,57 @@ func convert_to_string_keys(i interface{}) interface{} {
 var cfgFile string
 
 var RootCmd = &cobra.Command{
-	Use:   "kubeval",
+	Use:   "kubeval <file> [file...]",
 	Short: "Validate a Kubernetes YAML file against the relevant schema",
 	Long:  `Validate a Kubernetes YAML file against the relevant schema`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			fmt.Println("You must pass at least one file as an argument")
+			error("You must pass at least one file as an argument")
 			os.Exit(1)
 		}
+		success := true
 		for _, file := range args {
-			validate(file)
+			valid := validate(file)
+			if success {
+				success = valid
+			}
+		}
+		if !success {
+			os.Exit(1)
 		}
 	},
 }
 
 // Validate a Kubernetes YAML file accoring to a relevant schema
-func validate(element string) {
+// TODO This function requires a judicious amount of refactoring.
+func validate(element string) bool {
 	// Open the YAML file, convert to a Go interface and then
 	// load that as a document for gojsonschema to process
 	filename, _ := filepath.Abs(element)
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
-		panic(err)
+		error("Could not open file", filename)
+		return false
 	}
 
 	var spec interface{}
 	err = yaml.Unmarshal(yamlFile, &spec)
 	if err != nil {
-		panic(err)
+		error("Failed to decode YAML from", filename)
+		return false
 	}
 
 	body := convert_to_string_keys(spec)
+
 	documentLoader := gojsonschema.NewGoLoader(body)
 
 	cast := body.(map[string]interface{})
-	kind := strings.ToLower((cast["kind"].(string)))
+	if _, ok := cast["kind"]; !ok {
+		error("Missing a kind key in", filename)
+		return false
+	}
+
+	kind := cast["kind"].(string)
 
 	// We have both the upstream Kubernetes schemas and the OpenShift schemas available
 	// the tool can toggle between then using the --openshift boolean flag and here we
@@ -99,7 +135,7 @@ func validate(element string) {
 		normalised_version = "v" + normalised_version
 	}
 
-	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s/%s.json", schema_type, normalised_version, kind)
+	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s/%s.json", schema_type, normalised_version, strings.ToLower(kind))
 
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
 
@@ -112,21 +148,19 @@ func validate(element string) {
 
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		panic(err)
+		error(err)
+		return false
 	}
 
 	if result.Valid() {
-		fmt.Println("The document is valid")
+		success("The document", element, "is a valid", kind)
+		return true
 	} else {
-		fmt.Println("The document is not valid. see errors :")
+		warn("The document", element, "is not a valid", kind)
 		for _, desc := range result.Errors() {
-			fmt.Println(desc)
-			fmt.Println(desc.Type())
-			fmt.Println(desc.Field())
-			fmt.Println(desc.Description())
-			fmt.Println(desc.Details())
+			info("-->", desc)
 		}
-		os.Exit(1)
+		return false
 	}
 }
 
