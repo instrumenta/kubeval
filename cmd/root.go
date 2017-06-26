@@ -13,12 +13,20 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Version represents the version of Kubernetes
+// for which we should load the schema
 var Version string
+
+// OpenShift represents whether to test against
+// upstream Kubernetes of the OpenShift schemas
 var OpenShift bool
 
+// ValidFormat is a type for quickly forcing
+// new formats on the gojsonschema loader
 type ValidFormat struct{}
 
-// Ensure it meets the gojsonschema.FormatChecker interface
+// IsFormat always retusn true and meets the
+// gojsonschema.FormatChecker interface
 func (f ValidFormat) IsFormat(input string) bool {
 	return true
 }
@@ -47,24 +55,23 @@ func error(message ...interface{}) {
 // go through the result recursively, and convert each encountered
 // map[interface{}]interface{} to a map[string]interface{} value
 // required to marshall to JSON.
-func convert_to_string_keys(i interface{}) interface{} {
+func convertToStringKeys(i interface{}) interface{} {
 	switch x := i.(type) {
 	case map[interface{}]interface{}:
 		m2 := map[string]interface{}{}
 		for k, v := range x {
-			m2[k.(string)] = convert_to_string_keys(v)
+			m2[k.(string)] = convertToStringKeys(v)
 		}
 		return m2
 	case []interface{}:
 		for i, v := range x {
-			x[i] = convert_to_string_keys(v)
+			x[i] = convertToStringKeys(v)
 		}
 	}
 	return i
 }
 
-var cfgFile string
-
+// RootCmd represents the the command to run when kubeval is run
 var RootCmd = &cobra.Command{
 	Use:   "kubeval <file> [file...]",
 	Short: "Validate a Kubernetes YAML file against the relevant schema",
@@ -106,7 +113,7 @@ func validate(element string) bool {
 		return false
 	}
 
-	body := convert_to_string_keys(spec)
+	body := convertToStringKeys(spec)
 
 	documentLoader := gojsonschema.NewGoLoader(body)
 
@@ -121,21 +128,21 @@ func validate(element string) bool {
 	// We have both the upstream Kubernetes schemas and the OpenShift schemas available
 	// the tool can toggle between then using the --openshift boolean flag and here we
 	// use that to select which repository to get the schema from
-	var schema_type string
+	var schemaType string
 	if OpenShift {
-		schema_type = "openshift"
+		schemaType = "openshift"
 	} else {
-		schema_type = "kubernetes"
+		schemaType = "kubernetes"
 	}
 
 	// Most of the directories which store the schemas are prefixed with a v so as to
 	// match the tagging in the Kubernetes repository, apart from master.
-	normalised_version := Version
+	normalisedVersion := Version
 	if Version != "master" {
-		normalised_version = "v" + normalised_version
+		normalisedVersion = "v" + normalisedVersion
 	}
 
-	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s/%s.json", schema_type, normalised_version, strings.ToLower(kind))
+	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
 
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
 
@@ -155,13 +162,13 @@ func validate(element string) bool {
 	if result.Valid() {
 		success("The document", element, "is a valid", kind)
 		return true
-	} else {
-		warn("The document", element, "is not a valid", kind)
-		for _, desc := range result.Errors() {
-			info("-->", desc)
-		}
-		return false
 	}
+
+	warn("The document", element, "is not a valid", kind)
+	for _, desc := range result.Errors() {
+		info("-->", desc)
+	}
+	return false
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

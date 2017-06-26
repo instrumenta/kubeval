@@ -1,15 +1,16 @@
 language: go
 sudo: false
 
-
 go:
   - 1.8
 
 install:
   - git clone --depth 1 https://github.com/sstephenson/bats.git
   - go get -v github.com/Masterminds/glide
+  - go get -v github.com/golang/lint/golint
   - glide install
 
 script:
+  - golint
   - go build
   - PATH="./bats/bin:$PATH" ./acceptance.bats
