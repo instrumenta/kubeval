@@ -16,3 +16,16 @@
 	[ "$status" -eq 1 ]
   [ $(expr "$output" : "^Could not open file") -ne 0 ]
 }
+
+@test "Return relevant error for blank file" {
+  skip
+  run ./kubeval fixtures/blank.yaml
+	[ "$status" -eq 1 ]
+  [ $(expr "$output" : "^Missing a kind key") -ne 0 ]
+}
+
+@test "Return relevant error for YAML missing kind key" {
+  run ./kubeval fixtures/missing-kind.yaml
+	[ "$status" -eq 1 ]
+  [ $(expr "$output" : "^Missing a kind key") -ne 0 ]
+}
