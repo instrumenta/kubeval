@@ -5,12 +5,8 @@ go:
   - 1.8
 
 install:
-  - git clone --depth 1 https://github.com/sstephenson/bats.git
-  - go get -v github.com/Masterminds/glide
-  - go get -v github.com/golang/lint/golint
-  - glide install
+  - make tools deps
 
 script:
-  - golint
-  - go build
-  - PATH="./bats/bin:$PATH" ./acceptance.bats
+  - make check lint build
+  - PATH="./bats/bin:./bin/darwin/amd64:$PATH" make acceptance
