@@ -117,7 +117,7 @@ func validate(element string) bool {
 
 	documentLoader := gojsonschema.NewGoLoader(body)
 
-	cast := body.(map[string]interface{})
+	cast, _ := body.(map[string]interface{})
 	if _, ok := cast["kind"]; !ok {
 		error("Missing a kind key in", filename)
 		return false

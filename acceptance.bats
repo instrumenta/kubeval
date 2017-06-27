@@ -18,7 +18,6 @@
 }
 
 @test "Return relevant error for blank file" {
-  skip
   run ./kubeval fixtures/blank.yaml
 	[ "$status" -eq 1 ]
   [ $(expr "$output" : "^Missing a kind key") -ne 0 ]
