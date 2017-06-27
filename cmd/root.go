@@ -155,7 +155,8 @@ func validate(element string) bool {
 
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		error(err)
+		error("Problem loading schema from the network")
+		info(err)
 		return false
 	}
 
