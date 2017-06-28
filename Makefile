@@ -19,7 +19,7 @@ $(GOPATH)/bin/errcheck:
 vendor: glide.yaml $(GOPATH)/bin/glide
 	glide install
 
-check: $(GOPATH)/bin/errcheck
+check: vendor $(GOPATH)/bin/errcheck
 	errcheck
 
 releases:
