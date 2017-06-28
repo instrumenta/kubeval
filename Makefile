@@ -1,6 +1,5 @@
 NAME=kubeval
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
-OUTPUT ?= bin/darwin/amd64/$(NAME)
 
 all: build
 
@@ -37,7 +36,7 @@ bin/darwin/amd64:
 build: darwin linux windows
 
 darwin: vendor releases bin/darwin/amd64
-	go build -v -o $(CURDIR)/${OUTPUT}
+	env GOOS=darwin GOAARCH=amd64 go build -v -o $(CURDIR)/bin/darwin/amd64/$(NAME)
 	tar -cvzf releases/$(NAME)-darwin-amd64.tar.gz bin/darwin/amd64/$(NAME)
 
 linux: vendor releases bin/linux/amd64
@@ -47,9 +46,6 @@ linux: vendor releases bin/linux/amd64
 windows: vendor releases bin/windows/amd64
 	env GOOS=windows GOAARCH=amd64 go build -v -o $(CURDIR)/bin/windows/amd64/$(NAME)
 	tar -cvzf releases/$(NAME)-windows-amd64.tar.gz bin/windows/amd64/$(NAME)
-
-example: darwin
-	./${OUTPUT} fixtures/valid.yaml
 
 lint: $(GOPATH)/bin/golint
 	golint
@@ -71,4 +67,4 @@ clean:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-.PHONY: fmt clean cover acceptance test example windows linux darwin build check
+.PHONY: fmt clean cover acceptance test windows linux darwin build check
