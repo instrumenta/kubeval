@@ -68,9 +68,10 @@ cp bin/darwin/amd64/kubeval /usr/local/bin
 
 If you are modifying `kubeval`, or simply prefer to build your own
 binary, then the accompanying `Makefile` has all the build instructions.
+If you're on a Mac you should be able to just run:
 
 ```
-make tools deps build
+make build
 ```
 
 The above relies on you having installed Go build environment and
