@@ -1,9 +1,15 @@
 #!/usr/bin/env bats
 
-@test "Pass when parsing a valid Kubernetes config file" {
+@test "Pass when parsing a valid Kubernetes config YAML file" {
   run kubeval fixtures/valid.yaml
 	[ "$status" -eq 0 ]
   [ "$output" = "The document fixtures/valid.yaml is a valid ReplicationController" ]
+}
+
+@test "Pass when parsing a valid Kubernetes config JSON file" {
+  run kubeval fixtures/valid.json
+	[ "$status" -eq 0 ]
+  [ "$output" = "The document fixtures/valid.json is a valid Deployment" ]
 }
 
 @test "Fail when parsing an invalid Kubernetes config file" {

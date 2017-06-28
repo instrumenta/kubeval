@@ -1,6 +1,6 @@
 # Kubeval
 
-`kubeval` is a tool for validating a Kubernetes YAML configuration file.
+`kubeval` is a tool for validating a Kubernetes YAML or JSON configuration file.
 
 [![Build
 Status](https://travis-ci.org/garethr/kubeval.svg)](https://travis-ci.org/garethr/kubeval)
