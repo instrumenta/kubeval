@@ -56,6 +56,12 @@ release tab. These should contain a single `kubeval` binary for platform
 in the filename (ie. windows, linux, darwin). Either execute that binary
 directly or place it on your path.
 
+```
+wget
+https://github.com/garethr/kubeval/releases/download/0.1.0/kubeval-darwin-amd64.tar.gz
+tar xf kubeval-darwin-amd64.tar.gz
+cp bin/darwin/amd64/kubeval /usr/local/bin
+```
 
 
 ### From source
