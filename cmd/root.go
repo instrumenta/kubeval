@@ -94,7 +94,7 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-// Validate a Kubernetes YAML file accoring to a relevant schema
+// Validate a Kubernetes YAML file according to a relevant schema
 // TODO This function requires a judicious amount of refactoring.
 func validate(element string) bool {
 	// Open the YAML file, convert to a Go interface and then
