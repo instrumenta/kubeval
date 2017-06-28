@@ -4,9 +4,6 @@ sudo: false
 go:
   - 1.8
 
-install:
-  - make tools deps
-
 script:
   - make check lint build
-  - PATH="./bats/bin:./bin/darwin/amd64:$PATH" make acceptance
+  - PATH=bin/linux/amd64:$PATH make acceptance

@@ -4,51 +4,61 @@ OUTPUT ?= bin/darwin/amd64/$(NAME)
 
 all: build
 
-tools:
-	git clone --depth 1 https://github.com/sstephenson/bats.git
-	go get -u github.com/Masterminds/glide
-	go get -u github.com/golang/lint/golint
+$(GOPATH)/bin/glide:
+	go get github.com/Masterminds/glide
+
+$(GOPATH)/bin/golint:
+	go get github.com/golang/lint/golint
+
+$(GOPATH)/bin/errcheck:
 	go get -u github.com/kisielk/errcheck
 
-deps:
+.bats:
+	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
+
+glide.lock: glide.yaml $(GOPATH)/bin/glide
 	glide install
 
-check:
+check: $(GOPATH)/bin/errcheck
 	errcheck
 
-dirs:
+releases:
 	mkdir -p releases
-	mkdir -p bin/linux/amd64
-	mkdir -p bin/windows/amd64
-	mkdir -p bin/darwin/amd64
 
-build_deps: deps dirs
+bin/linux/amd64:
+	mkdir -p bin/linux/amd64
+
+bin/windows/amd64:
+	mkdir -p bin/windows/amd64
+
+bin/darwin/amd64:
+	mkdir -p bin/darwin/amd64
 
 build: darwin linux windows
 
-darwin: build_deps
+darwin: glide.lock releases bin/darwin/amd64
 	go build -v -o $(CURDIR)/${OUTPUT}
 	tar -cvzf releases/$(NAME)-darwin-amd64.tar.gz bin/darwin/amd64/$(NAME)
 
-linux: build_deps
+linux: glide.lock releases bin/linux/amd64
 	env GOOS=linux GOAARCH=amd64 go build -v -o $(CURDIR)/bin/linux/amd64/$(NAME)
 	tar -cvzf releases/$(NAME)-linux-amd64.tar.gz bin/linux/amd64/$(NAME)
 
-windows: build_deps
+windows: glide.lock releases bin/windows/amd64
 	env GOOS=windows GOAARCH=amd64 go build -v -o $(CURDIR)/bin/windows/amd64/$(NAME)
 	tar -cvzf releases/$(NAME)-windows-amd64.tar.gz bin/windows/amd64/$(NAME)
 
 example: darwin
-	cat ./${OUTPUT} fixtures/valid.yaml
+	./${OUTPUT} fixtures/valid.yaml
 
-lint:
+lint: $(GOPATH)/bin/golint
 	golint
 
 test:
 	go test
 
-acceptance:
-	PATH=bin/darwin/amd64:$$PATH ./acceptance.bats
+acceptance: .bats
+	env PATH=./.bats/bin:$$PATH:./bin/darwin/amd64 ./acceptance.bats
 
 cover:
 	go test -coverprofile=coverage.out
@@ -60,3 +70,5 @@ clean:
 
 fmt:
 	gofmt -w $(GOFMT_FILES)
+
+.PHONY: fmt clean cover acceptance test example windows linux darwin build check

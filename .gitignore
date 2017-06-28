@@ -2,3 +2,4 @@ kubeval
 vendor
 bin
 releases
+.bats
