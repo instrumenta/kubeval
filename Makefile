@@ -16,7 +16,7 @@ $(GOPATH)/bin/errcheck:
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
 
-glide.lock: glide.yaml $(GOPATH)/bin/glide
+vendor: glide.yaml $(GOPATH)/bin/glide
 	glide install
 
 check: $(GOPATH)/bin/errcheck
@@ -36,15 +36,15 @@ bin/darwin/amd64:
 
 build: darwin linux windows
 
-darwin: glide.lock releases bin/darwin/amd64
+darwin: vendor releases bin/darwin/amd64
 	go build -v -o $(CURDIR)/${OUTPUT}
 	tar -cvzf releases/$(NAME)-darwin-amd64.tar.gz bin/darwin/amd64/$(NAME)
 
-linux: glide.lock releases bin/linux/amd64
+linux: vendor releases bin/linux/amd64
 	env GOOS=linux GOAARCH=amd64 go build -v -o $(CURDIR)/bin/linux/amd64/$(NAME)
 	tar -cvzf releases/$(NAME)-linux-amd64.tar.gz bin/linux/amd64/$(NAME)
 
-windows: glide.lock releases bin/windows/amd64
+windows: vendor releases bin/windows/amd64
 	env GOOS=windows GOAARCH=amd64 go build -v -o $(CURDIR)/bin/windows/amd64/$(NAME)
 	tar -cvzf releases/$(NAME)-windows-amd64.tar.gz bin/windows/amd64/$(NAME)
 
