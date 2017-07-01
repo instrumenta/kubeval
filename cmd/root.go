@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/xeipuuv/gojsonschema"
+	"github.com/yalp/jsonpath"
 	"gopkg.in/yaml.v2"
 )
 
@@ -48,6 +50,23 @@ func warn(message ...interface{}) {
 func error(message ...interface{}) {
 	red := color.New(color.FgRed)
 	red.Println(message...)
+}
+
+func stringInSlice(a string, list []interface{}) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func isJsonNumber(what interface{}) bool {
+	switch what.(type) {
+	case json.Number:
+		return true
+	}
+	return false
 }
 
 // Based on https://stackoverflow.com/questions/40737122/convert-yaml-to-json-without-struct-golang
@@ -142,7 +161,7 @@ func validate(element string) bool {
 		normalisedVersion = "v" + normalisedVersion
 	}
 
-	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
+	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
 
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
 
@@ -165,11 +184,48 @@ func validate(element string) bool {
 		return true
 	}
 
-	warn("The document", element, "is not a valid", kind)
+	// The Kubernetes JSON schemas usage isn't valid in my view
+	// Integers are passed to string fields but with a format hint saying
+	// "don't worry, it's not really a string". This goes by the name of
+	// int-or-string. I don't have a complete solution to resolving this
+	// here, and will be reporting upstream when I get a moment to write up
+	// properly. But rather than mark valid files as invalid here's a work around
+
+	// Grab all the formats used in the current schema and see if
+	// int-or-string is present. If it's not we know for definitely a
+	// number passed to a string field is invalid
+	schemaJson, _ := schemaLoader.LoadJSON()
+	formats, _ := jsonpath.Read(schemaJson, "$..format")
+	schemaContainsIntOrString := stringInSlice("int-or-string", formats.([]interface{}))
+
+	// Some errors might be caused by int-or-string
+	// so we need to track whether we have one or more non int-or-string candidates
+	noRealErrors := true
 	for _, desc := range result.Errors() {
-		info("-->", desc)
+		isNumber := isJsonNumber(desc.Value())
+		// Here is the heuristic we're using to say something is likely a valid
+		// Kubernetes config even though it's not valid according to the schema
+		// is it a number?
+		// does the schema contain any int-or-string formated fields?
+		// is the validation error invalid type
+		// This will raise some false negatives unfortunately so we
+		// print a warning rather than fail completely
+		if isNumber && schemaContainsIntOrString && desc.Type() == "invalid_type" {
+			warn("--->", desc.Field(), "is an integer, but might be an int_or_string property")
+		} else {
+			info("-->", desc)
+			if noRealErrors {
+				noRealErrors = false
+			}
+		}
 	}
-	return false
+	if noRealErrors {
+		success("The document", element, "is a valid", kind)
+		return true
+	} else {
+		warn("The document", element, "is not a valid", kind)
+		return false
+	}
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
