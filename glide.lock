@@ -1,5 +1,5 @@
-hash: bae7942ce953957f11533a8509b412e748b6a62c53c50c4bca884a8de82b9252
-updated: 2017-06-27T11:51:10.969300219+01:00
+hash: bd3ca1478601970dda9ea6443ec42794136ef0c1cd134bff4770f53fdcfd7275
+updated: 2017-07-01T16:46:21.659717301+01:00
 imports:
 - name: github.com/fatih/color
   version: 570b54cabe6b8eb0bc2dfce68d964677d63b5260
@@ -21,6 +21,8 @@ imports:
   version: e02fc20de94c78484cd5ffb007f8af96be030a45
 - name: github.com/xeipuuv/gojsonschema
   version: 0c8571ac0ce161a5feb57375a9cdf148c98c0f70
+- name: github.com/yalp/jsonpath
+  version: 31a79c7593bb93eb10b163650d4a3e6ca190e4dc
 - name: golang.org/x/sys
   version: e24f485414aeafb646f6fca458b0bf869c0880a1
   repo: https://go.googlesource.com/sys
