@@ -142,7 +142,7 @@ func validate(element string) bool {
 		normalisedVersion = "v" + normalisedVersion
 	}
 
-	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
+	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
 
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
 
