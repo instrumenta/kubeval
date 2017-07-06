@@ -106,6 +106,10 @@ func validate(element string) bool {
 		return false
 	}
 
+	if strings.Contains(string(yamlFile), "\n---") {
+		warn("File contains multiple docs, only the first will be validated:", filename)
+	}
+
 	var spec interface{}
 	err = yaml.Unmarshal(yamlFile, &spec)
 	if err != nil {
