@@ -1,5 +1,6 @@
 NAME=kubeval
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
+TAG=$$(git describe --abbrev=0 --tags)
 
 all: build
 
@@ -50,6 +51,14 @@ windows: vendor releases bin/windows/amd64
 lint: $(GOPATH)/bin/golint
 	golint
 
+docker:
+	docker build -t garethr/kubeval:$(TAG) .
+	docker tag garethr/kubeval:$(TAG) garethr/kubeval:latest.
+
+publish: docker
+	docker push garethr/kubeval:$(TAG)
+	docker push garethr/kubeval:latest
+
 test:
 	go test
 
@@ -67,4 +76,4 @@ clean:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-.PHONY: fmt clean cover acceptance test windows linux darwin build check
+.PHONY: fmt clean cover acceptance lint docker test windows linux darwin build check

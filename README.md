@@ -63,6 +63,21 @@ tar xf kubeval-darwin-amd64.tar.gz
 cp bin/darwin/amd64/kubeval /usr/local/bin
 ```
 
+`kubeval` is also published as a Docker image. So can be used as
+follows:
+
+```
+$ docker run -it -v `pwd`/fixtures:/fixtures garethr/kubeval fixtures/*
+Missing a kind key in /fixtures/blank.yaml
+The document fixtures/int_or_string.yaml is a valid Service
+The document fixtures/int_or_string_false.yaml is not a valid Deployment
+--> spec.template.spec.containers.0.env.0.value: Invalid type. Expected: string, given: integer
+The document fixtures/invalid.yaml is not a valid ReplicationController
+--> spec.replicas: Invalid type. Expected: integer, given: string
+Missing a kind key in /fixtures/missing-kind.yaml
+The document fixtures/valid.json is a valid Deployment
+The document fixtures/valid.yaml is a valid ReplicationController
+```
 
 ### From source
 
