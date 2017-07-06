@@ -1,6 +1,7 @@
 package kubeval
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -28,11 +29,9 @@ func (f ValidFormat) IsFormat(input string) bool {
 	return true
 }
 
-// Validate a Kubernetes YAML file according to a relevant schema
-// TODO This function requires a judicious amount of refactoring.
-func Validate(element []byte, fileName string) bool {
+func validateResource(data []byte, fileName string) bool {
 	var spec interface{}
-	err := yaml.Unmarshal(element, &spec)
+	err := yaml.Unmarshal(data, &spec)
 	if err != nil {
 		log.Error("Failed to decode YAML from", fileName)
 		return false
@@ -95,4 +94,23 @@ func Validate(element []byte, fileName string) bool {
 		log.Info("-->", desc)
 	}
 	return false
+}
+
+// Validate a Kubernetes YAML file according to a relevant schema
+// TODO This function requires a judicious amount of refactoring.
+func Validate(config []byte, fileName string) bool {
+
+	bits := bytes.Split(config, []byte("---\n"))
+
+	results := make([]bool, len(bits))
+	for i, element := range bits {
+		result := validateResource(element, fileName)
+		results[i] = result
+	}
+	for _, a := range results {
+		if a == false {
+			return false
+		}
+	}
+	return true
 }
