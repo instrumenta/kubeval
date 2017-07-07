@@ -53,7 +53,7 @@ lint: $(GOPATH)/bin/golint
 
 docker:
 	docker build -t garethr/kubeval:$(TAG) .
-	docker tag garethr/kubeval:$(TAG) garethr/kubeval:latest.
+	docker tag garethr/kubeval:$(TAG) garethr/kubeval:latest
 
 publish: docker
 	docker push garethr/kubeval:$(TAG)
