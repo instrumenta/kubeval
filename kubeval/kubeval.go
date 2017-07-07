@@ -85,11 +85,11 @@ func validateResource(data []byte, fileName string) bool {
 	}
 
 	if result.Valid() {
-		log.Success("The document", fileName, "is a valid", kind)
+		log.Success("The document", fileName, "contains a valid", kind)
 		return true
 	}
 
-	log.Warn("The document", fileName, "is not a valid", kind)
+	log.Warn("The document", fileName, "contains an invalid", kind)
 	for _, desc := range result.Errors() {
 		log.Info("-->", desc)
 	}
@@ -100,12 +100,21 @@ func validateResource(data []byte, fileName string) bool {
 // TODO This function requires a judicious amount of refactoring.
 func Validate(config []byte, fileName string) bool {
 
+	if len(config) == 0 {
+		log.Error("The document", fileName, "appears to be empty")
+		return false
+	}
+
 	bits := bytes.Split(config, []byte("---\n"))
 
 	results := make([]bool, len(bits))
 	for i, element := range bits {
-		result := validateResource(element, fileName)
-		results[i] = result
+		if len(element) > 0 {
+			result := validateResource(element, fileName)
+			results[i] = result
+		} else {
+			results[i] = true
+		}
 	}
 	for _, a := range results {
 		if a == false {

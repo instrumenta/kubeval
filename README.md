@@ -10,7 +10,7 @@ Card](https://goreportcard.com/badge/github.com/garethr/kubeval)](https://gorepo
 
 ```
 $ kubeval my-invalid-rc.yaml
-The document my-invalid-rc.yaml is not a valid ReplicationController
+The document my-invalid-rc.yaml contains an invalid ReplicationController
 --> spec.replicas: Invalid type. Expected: integer, given: string
 $ echo $?
 1
@@ -69,14 +69,14 @@ follows:
 ```
 $ docker run -it -v `pwd`/fixtures:/fixtures garethr/kubeval fixtures/*
 Missing a kind key in /fixtures/blank.yaml
-The document fixtures/int_or_string.yaml is a valid Service
-The document fixtures/int_or_string_false.yaml is not a valid Deployment
+The document fixtures/int_or_string.yaml contains a valid Service
+The document fixtures/int_or_string_false.yaml contains an invalid Deployment
 --> spec.template.spec.containers.0.env.0.value: Invalid type. Expected: string, given: integer
-The document fixtures/invalid.yaml is not a valid ReplicationController
+The document fixtures/invalid.yaml contains an invalid ReplicationController
 --> spec.replicas: Invalid type. Expected: integer, given: string
 Missing a kind key in /fixtures/missing-kind.yaml
-The document fixtures/valid.json is a valid Deployment
-The document fixtures/valid.yaml is a valid ReplicationController
+The document fixtures/valid.json contains a valid Deployment
+The document fixtures/valid.yaml contains a valid ReplicationController
 ```
 
 ### From source

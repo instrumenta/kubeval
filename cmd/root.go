@@ -27,6 +27,7 @@ var RootCmd = &cobra.Command{
 			yamlFile, err := ioutil.ReadFile(filePath)
 			if err != nil {
 				log.Error("Could not open file", fileName)
+				os.Exit(1)
 			}
 			valid := kubeval.Validate(yamlFile, fileName)
 			if success {
