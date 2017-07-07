@@ -3,19 +3,29 @@
 @test "Pass when parsing a valid Kubernetes config YAML file" {
   run kubeval fixtures/valid.yaml
 	[ "$status" -eq 0 ]
-  [ "$output" = "The document fixtures/valid.yaml is a valid ReplicationController" ]
+  [ "$output" = "The document fixtures/valid.yaml contains a valid ReplicationController" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config JSON file" {
   run kubeval fixtures/valid.json
 	[ "$status" -eq 0 ]
-  [ "$output" = "The document fixtures/valid.json is a valid Deployment" ]
+  [ "$output" = "The document fixtures/valid.json contains a valid Deployment" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config file with int_to_string vars" {
   run kubeval fixtures/int_or_string.yaml
 	[ "$status" -eq 0 ]
-  [ "$output" = "The document fixtures/int_or_string.yaml is a valid Service" ]
+  [ "$output" = "The document fixtures/int_or_string.yaml contains a valid Service" ]
+}
+
+@test "Pass when parsing a multi-document config file" {
+  run kubeval fixtures/multi_valid.yaml
+	[ "$status" -eq 0 ]
+}
+
+@test "Fail when parsing a multi-document config file with one invalid resource" {
+  run kubeval fixtures/multi_invalid.yaml
+	[ "$status" -eq 1 ]
 }
 
 @test "Fail when parsing an invalid Kubernetes config file" {
@@ -32,7 +42,7 @@
 @test "Return relevant error for blank file" {
   run kubeval fixtures/blank.yaml
 	[ "$status" -eq 1 ]
-  [ $(expr "$output" : "^Missing a kind key") -ne 0 ]
+  [ "$output" = "The document fixtures/blank.yaml appears to be empty" ]
 }
 
 @test "Return relevant error for YAML missing kind key" {
