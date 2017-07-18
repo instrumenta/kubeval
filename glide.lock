@@ -1,8 +1,10 @@
-hash: bae7942ce953957f11533a8509b412e748b6a62c53c50c4bca884a8de82b9252
-updated: 2017-06-27T11:51:10.969300219+01:00
+hash: f95ca47dd12b1bdbb09bee308035863865c964aacdcfc6083a34a0756610ae56
+updated: 2017-07-18T15:25:07.669274371+01:00
 imports:
 - name: github.com/fatih/color
   version: 570b54cabe6b8eb0bc2dfce68d964677d63b5260
+- name: github.com/hashicorp/go-multierror
+  version: 83588e72410abfbe4df460eeb6f30841ae47d4c4
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/mattn/go-colorable

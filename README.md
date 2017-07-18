@@ -1,6 +1,7 @@
 # Kubeval
 
 `kubeval` is a tool for validating a Kubernetes YAML or JSON configuration file.
+It can also be used as a library in other Go applications.
 
 [![Build
 Status](https://travis-ci.org/garethr/kubeval.svg)](https://travis-ci.org/garethr/kubeval)
@@ -123,6 +124,33 @@ The command has three important features:
 $ kubeval -v 1.6.6 my-deployment.yaml
 $ kubeval --openshift -v 1.5.1 my-deployment.yaml
 ```
+
+## Library
+
+After installing with you prefered dependency management tool, import the relevant module.
+
+```go
+import (
+  "github.com/garethr/kubeval/kubeval"
+)
+```
+
+The module provides one public function, `Validate`, which can be used
+like so:
+
+```go
+results, err := kubeval.Validate(fileContents, fileName)
+```
+
+The method signature for `Validate` is:
+
+```go
+Validate(config []byte, fileName string) ([]ValidationResult, error)
+```
+
+The simples way of seeing it's usage is probably in the `kubeval`
+[command line tool source code](cmd/root.go).
+
 
 ## Status
 
