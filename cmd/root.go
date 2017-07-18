@@ -17,6 +17,10 @@ var RootCmd = &cobra.Command{
 	Short: "Validate a Kubernetes YAML file against the relevant schema",
 	Long:  `Validate a Kubernetes YAML file against the relevant schema`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if Version {
+			printVersion()
+			os.Exit(0)
+		}
 		if len(args) < 1 {
 			log.Error("You must pass at least one file as an argument")
 			os.Exit(1)
@@ -52,4 +56,5 @@ func Execute() {
 func init() {
 	RootCmd.Flags().StringVarP(&kubeval.Version, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
 	RootCmd.Flags().BoolVarP(&kubeval.OpenShift, "openshift", "", false, "Use OpenShift schemas instead of upstream Kubernetes")
+	RootCmd.Flags().BoolVarP(&Version, "version", "", false, "Display the kubeval version information and exit")
 }
