@@ -8,6 +8,8 @@ Status](https://travis-ci.org/garethr/kubeval.svg)](https://travis-ci.org/gareth
 [![Go Report
 Card](https://goreportcard.com/badge/github.com/garethr/kubeval)](https://goreportcard.com/report/github.com/garethr/kubeval)
 [![GoDoc](https://godoc.org/github.com/garethr/kubeval?status.svg)](https://godoc.org/github.com/garethr/kubeval)
+[![Coverage
+Status](https://coveralls.io/repos/github/garethr/kubeval/badge.svg?branch=master)](https://coveralls.io/github/garethr/kubeval?branch=master)
 
 ```
 $ kubeval my-invalid-rc.yaml
