@@ -9,7 +9,7 @@ jobs:
     - script: make vet check lint coveralls
     - script: PATH=bin/linux/amd64:$PATH make build acceptance
     - stage: deploy
-      script: skip
+    - script: make build
       deploy:
         provider: releases
         api_key:
