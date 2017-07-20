@@ -23,8 +23,13 @@ $(GOPATH)/bin/errcheck:
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
 
-vendor: glide.yaml $(GOPATH)/bin/glide
+glide.lock: glide.yaml $(GOPATH)/bin/glide
+	glide update
+	@touch $@
+
+vendor: glide.lock
 	glide install
+	@touch $@
 
 check: vendor $(GOPATH)/bin/errcheck
 	errcheck
@@ -66,7 +71,10 @@ publish: docker
 	docker push garethr/kubeval:$(TAG)
 	docker push garethr/kubeval:latest
 
-test:
+vet:
+	go vet `glide novendor`
+
+test: vendor
 	go test -v -cover `glide novendor`
 
 watch:
@@ -86,4 +94,4 @@ clean:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-.PHONY: fmt clean cover acceptance lint docker test watch windows linux darwin build check
+.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check
