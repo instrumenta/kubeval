@@ -17,14 +17,22 @@ $(GOPATH)/bin/glide:
 $(GOPATH)/bin/golint:
 	go get github.com/golang/lint/golint
 
+$(GOPATH)/bin/goveralls:
+	go get github.com/mattn/goveralls
+
 $(GOPATH)/bin/errcheck:
 	go get -u github.com/kisielk/errcheck
 
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
 
-vendor: glide.yaml $(GOPATH)/bin/glide
+glide.lock: glide.yaml $(GOPATH)/bin/glide
+	glide update
+	@touch $@
+
+vendor: glide.lock
 	glide install
+	@touch $@
 
 check: vendor $(GOPATH)/bin/errcheck
 	errcheck
@@ -66,14 +74,23 @@ publish: docker
 	docker push garethr/kubeval:$(TAG)
 	docker push garethr/kubeval:latest
 
-test:
-	go test
+vet:
+	go vet `glide novendor`
+
+test: vendor vet lint check
+	go test -v -cover `glide novendor`
+
+coveralls: vendor $(GOPATH)/bin/goveralls
+	goveralls -service=travis-ci
+
+watch:
+	ls */*.go | entr make test
 
 acceptance: .bats
 	env PATH=./.bats/bin:$$PATH:./bin/darwin/amd64 ./acceptance.bats
 
 cover:
-	go test -coverprofile=coverage.out
+	go test -v ./kubeval -coverprofile=coverage.out
 	go tool cover -html=coverage.out
 	rm coverage.out
 
@@ -83,4 +100,4 @@ clean:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-.PHONY: fmt clean cover acceptance lint docker test windows linux darwin build check
+.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check

@@ -2,13 +2,13 @@ package kubeval
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
-
-	"github.com/garethr/kubeval/log"
 )
 
 // Version represents the version of Kubernetes
@@ -23,32 +23,21 @@ var OpenShift bool
 // new formats on the gojsonschema loader
 type ValidFormat struct{}
 
-// IsFormat always retusn true and meets the
+// IsFormat always returns true and meets the
 // gojsonschema.FormatChecker interface
 func (f ValidFormat) IsFormat(input string) bool {
 	return true
 }
 
-func validateResource(data []byte, fileName string) bool {
-	var spec interface{}
-	err := yaml.Unmarshal(data, &spec)
-	if err != nil {
-		log.Error("Failed to decode YAML from", fileName)
-		return false
-	}
+// ValidationResult contains the details from
+// validating a given Kubernetes resource
+type ValidationResult struct {
+	FileName string
+	Kind     string
+	Errors   []gojsonschema.ResultError
+}
 
-	body := convertToStringKeys(spec)
-
-	documentLoader := gojsonschema.NewGoLoader(body)
-
-	cast, _ := body.(map[string]interface{})
-	if _, ok := cast["kind"]; !ok {
-		log.Error("Missing a kind key in", fileName)
-		return false
-	}
-
-	kind := cast["kind"].(string)
-
+func determineSchema(kind string) string {
 	// We have both the upstream Kubernetes schemas and the OpenShift schemas available
 	// the tool can toggle between then using the --openshift boolean flag and here we
 	// use that to select which repository to get the schema from
@@ -59,6 +48,10 @@ func validateResource(data []byte, fileName string) bool {
 		schemaType = "kubernetes"
 	}
 
+	// Set a default Version to make usage as a library easier
+	if Version == "" {
+		Version = "master"
+	}
 	// Most of the directories which store the schemas are prefixed with a v so as to
 	// match the tagging in the Kubernetes repository, apart from master.
 	normalisedVersion := Version
@@ -66,7 +59,38 @@ func validateResource(data []byte, fileName string) bool {
 		normalisedVersion = "v" + normalisedVersion
 	}
 
-	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
+	return fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
+}
+
+func determineKind(body interface{}) (string, error) {
+	cast, _ := body.(map[string]interface{})
+	if _, ok := cast["kind"]; !ok {
+		return "", errors.New("Missing a kind key")
+	}
+
+	return cast["kind"].(string), nil
+}
+
+// validateResource validates a single Kubernetes resource against
+// the relevant schema, detecting the type of resource automatically
+func validateResource(data []byte, fileName string) (ValidationResult, error) {
+	var spec interface{}
+	result := ValidationResult{}
+	result.FileName = fileName
+	err := yaml.Unmarshal(data, &spec)
+	if err != nil {
+		return result, errors.New("Failed to decode YAML from " + fileName)
+	}
+
+	body := convertToStringKeys(spec)
+	documentLoader := gojsonschema.NewGoLoader(body)
+
+	kind, err := determineKind(body)
+	if err != nil {
+		return result, err
+	}
+	result.Kind = kind
+	schema := determineSchema(kind)
 
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
 
@@ -77,49 +101,39 @@ func validateResource(data []byte, fileName string) bool {
 	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
 	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
 
-	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	results, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		log.Error("Problem loading schema from the network")
-		log.Info(err)
-		return false
+		return result, errors.New("Problem loading schema from the network")
 	}
 
-	if result.Valid() {
-		log.Success("The document", fileName, "contains a valid", kind)
-		return true
+	if results.Valid() {
+		return result, nil
 	}
 
-	log.Warn("The document", fileName, "contains an invalid", kind)
-	for _, desc := range result.Errors() {
-		log.Info("-->", desc)
-	}
-	return false
+	result.Errors = results.Errors()
+	return result, nil
 }
 
-// Validate a Kubernetes YAML file according to a relevant schema
+// Validate a Kubernetes YAML file, parsing out individual resources
+// and validating them all according to the  relevant schemas
 // TODO This function requires a judicious amount of refactoring.
-func Validate(config []byte, fileName string) bool {
-
+func Validate(config []byte, fileName string) ([]ValidationResult, error) {
 	if len(config) == 0 {
-		log.Error("The document", fileName, "appears to be empty")
-		return false
+		return nil, errors.New("The document " + fileName + " appears to be empty")
 	}
 
 	bits := bytes.Split(config, []byte("---\n"))
 
-	results := make([]bool, len(bits))
+	results := make([]ValidationResult, len(bits))
+	var errors *multierror.Error
 	for i, element := range bits {
 		if len(element) > 0 {
-			result := validateResource(element, fileName)
+			result, err := validateResource(element, fileName)
 			results[i] = result
-		} else {
-			results[i] = true
+			if err != nil {
+				errors = multierror.Append(errors, err)
+			}
 		}
 	}
-	for _, a := range results {
-		if a == false {
-			return false
-		}
-	}
-	return true
+	return results, errors.ErrorOrNil()
 }

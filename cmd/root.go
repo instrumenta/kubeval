@@ -28,14 +28,27 @@ var RootCmd = &cobra.Command{
 		success := true
 		for _, fileName := range args {
 			filePath, _ := filepath.Abs(fileName)
-			yamlFile, err := ioutil.ReadFile(filePath)
+			fileContents, err := ioutil.ReadFile(filePath)
 			if err != nil {
 				log.Error("Could not open file", fileName)
 				os.Exit(1)
 			}
-			valid := kubeval.Validate(yamlFile, fileName)
-			if success {
-				success = valid
+			results, err := kubeval.Validate(fileContents, fileName)
+			if err != nil {
+				log.Error(err)
+				os.Exit(1)
+			}
+
+			for _, result := range results {
+				if len(result.Errors) > 0 {
+					success = false
+					log.Warn("The document", result.FileName, "contains an invalid", result.Kind)
+					for _, desc := range result.Errors {
+						log.Info("--->", desc)
+					}
+				} else {
+					log.Success("The document", result.FileName, "contains a valid", result.Kind)
+				}
 			}
 		}
 		if !success {
