@@ -67,13 +67,16 @@ publish: docker
 	docker push garethr/kubeval:latest
 
 test:
-	go test
+	go test -v -cover `glide novendor`
+
+watch:
+	ls */*.go | entr make test
 
 acceptance: .bats
 	env PATH=./.bats/bin:$$PATH:./bin/darwin/amd64 ./acceptance.bats
 
 cover:
-	go test -coverprofile=coverage.out
+	go test -v ./kubeval -coverprofile=coverage.out
 	go tool cover -html=coverage.out
 	rm coverage.out
 
@@ -83,4 +86,4 @@ clean:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-.PHONY: fmt clean cover acceptance lint docker test windows linux darwin build check
+.PHONY: fmt clean cover acceptance lint docker test watch windows linux darwin build check

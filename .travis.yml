@@ -4,18 +4,20 @@ sudo: false
 go:
 - 1.8
 
-script:
-- make check lint build
-- PATH=bin/linux/amd64:$PATH make acceptance
-
-deploy:
-  provider: releases
-  api_key:
-    secure: oHlh/sYGqn7coTzlRAm5Qnxb8fCbpd0VV3jDhbVZgNw2a0gNDLZ5UqI8POirLEsG/ezfiZyA6Q3xglLcIejsmfupDZ12aUyWNlqzjrJt8G0tDqWEF5X27OiGk5bKJZ0i9llSq8Unj8TRxRO90Uyxd4pjj+vXiH9N0rVO5x79bHA4d49CdP7BefABBuj3TW0cQ5odn/JMZD/XPZIqZ9T46k86IszQIkio0krCAMStnAyB/xFg+aPH8RB3sdi1jFqO95AZpPGvmnZCVVpXeJ7TFCnakL3s4Gk3JdlYVLz5lnZIqVswFXNoBgAXWATO62mtiobpG/qBZVGc12b5wwckR5sXsc7BW8DbtEpvKX7xA8HyvvMtrnR52KwzukmRK5QH8BxoKPOXRlpSzI7SOWhZWy+tWTAnQiZr054p1I+A/S8YafwJBEbTPx3PVeEk/lC4jsPJ3TOGw6TSkflT90FcvgNhR5AG0TrwT3DJ1JpVoO0jJmsU/QyjvgpxuAlLNbikx3edhdiOYnjpHYUtpMxu5VSy14C4sJQtTg7Q1oLZgsg6GJuk1VfWvY2z7gUfyL+OEq64oi89y9b9YX7dc7qIjgZQfX57KDDeyEKqJN3Gyu9QhCC9N7D/LZivSZqthkIdIle0SGArMAJlUPBqZp6zgMaea6E8pl24qLEDRDfQAl4=
-  file:
-  - releases/kubeval-darwin-amd64.tar.gz
-  - releases/kubeval-windows-amd64.tar.gz
-  - releases/kubeval-linux-amd64.tar.gz
-  on:
-    repo: garethr/kubeval
-    tags: true
+jobs:
+  include:
+    - script: make check lint test
+    - script: PATH=bin/linux/amd64:$PATH make build acceptance
+    - stage: deploy
+      script: skip
+      deploy:
+        provider: releases
+        api_key:
+          secure: oHlh/sYGqn7coTzlRAm5Qnxb8fCbpd0VV3jDhbVZgNw2a0gNDLZ5UqI8POirLEsG/ezfiZyA6Q3xglLcIejsmfupDZ12aUyWNlqzjrJt8G0tDqWEF5X27OiGk5bKJZ0i9llSq8Unj8TRxRO90Uyxd4pjj+vXiH9N0rVO5x79bHA4d49CdP7BefABBuj3TW0cQ5odn/JMZD/XPZIqZ9T46k86IszQIkio0krCAMStnAyB/xFg+aPH8RB3sdi1jFqO95AZpPGvmnZCVVpXeJ7TFCnakL3s4Gk3JdlYVLz5lnZIqVswFXNoBgAXWATO62mtiobpG/qBZVGc12b5wwckR5sXsc7BW8DbtEpvKX7xA8HyvvMtrnR52KwzukmRK5QH8BxoKPOXRlpSzI7SOWhZWy+tWTAnQiZr054p1I+A/S8YafwJBEbTPx3PVeEk/lC4jsPJ3TOGw6TSkflT90FcvgNhR5AG0TrwT3DJ1JpVoO0jJmsU/QyjvgpxuAlLNbikx3edhdiOYnjpHYUtpMxu5VSy14C4sJQtTg7Q1oLZgsg6GJuk1VfWvY2z7gUfyL+OEq64oi89y9b9YX7dc7qIjgZQfX57KDDeyEKqJN3Gyu9QhCC9N7D/LZivSZqthkIdIle0SGArMAJlUPBqZp6zgMaea6E8pl24qLEDRDfQAl4=
+        file:
+        - releases/kubeval-darwin-amd64.tar.gz
+        - releases/kubeval-windows-amd64.tar.gz
+        - releases/kubeval-linux-amd64.tar.gz
+        on:
+          repo: garethr/kubeval
+          tags: true

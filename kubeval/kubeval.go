@@ -37,29 +37,7 @@ type ValidationResult struct {
 	Errors   []gojsonschema.ResultError
 }
 
-// validateResource validates a single Kubernetes resource against
-// the relevant schema, detecting the type of resource automatically
-func validateResource(data []byte, fileName string) (ValidationResult, error) {
-	var spec interface{}
-	result := ValidationResult{}
-	result.FileName = fileName
-	err := yaml.Unmarshal(data, &spec)
-	if err != nil {
-		return result, errors.New("Failed to decode YAML from " + fileName)
-	}
-
-	body := convertToStringKeys(spec)
-
-	documentLoader := gojsonschema.NewGoLoader(body)
-
-	cast, _ := body.(map[string]interface{})
-	if _, ok := cast["kind"]; !ok {
-		return result, errors.New("Missing a kind key in " + fileName)
-	}
-
-	kind := cast["kind"].(string)
-	result.Kind = kind
-
+func determineSchema(kind string) string {
 	// We have both the upstream Kubernetes schemas and the OpenShift schemas available
 	// the tool can toggle between then using the --openshift boolean flag and here we
 	// use that to select which repository to get the schema from
@@ -81,7 +59,38 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 		normalisedVersion = "v" + normalisedVersion
 	}
 
-	schema := fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
+	return fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
+}
+
+func determineKind(body interface{}) (string, error) {
+	cast, _ := body.(map[string]interface{})
+	if _, ok := cast["kind"]; !ok {
+		return "", errors.New("Missing a kind key")
+	}
+
+	return cast["kind"].(string), nil
+}
+
+// validateResource validates a single Kubernetes resource against
+// the relevant schema, detecting the type of resource automatically
+func validateResource(data []byte, fileName string) (ValidationResult, error) {
+	var spec interface{}
+	result := ValidationResult{}
+	result.FileName = fileName
+	err := yaml.Unmarshal(data, &spec)
+	if err != nil {
+		return result, errors.New("Failed to decode YAML from " + fileName)
+	}
+
+	body := convertToStringKeys(spec)
+	documentLoader := gojsonschema.NewGoLoader(body)
+
+	kind, err := determineKind(body)
+	if err != nil {
+		return result, err
+	}
+	result.Kind = kind
+	schema := determineSchema(kind)
 
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
 
