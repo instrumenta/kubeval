@@ -17,6 +17,9 @@ $(GOPATH)/bin/glide:
 $(GOPATH)/bin/golint:
 	go get github.com/golang/lint/golint
 
+$(GOPATH)/bin/goveralls:
+	go get github.com/mattn/goveralls
+
 $(GOPATH)/bin/errcheck:
 	go get -u github.com/kisielk/errcheck
 
@@ -74,8 +77,11 @@ publish: docker
 vet:
 	go vet `glide novendor`
 
-test: vendor
+test: vendor vet lint check
 	go test -v -cover `glide novendor`
+
+coveralls: vendor $(GOPATH)/bin/goveralls
+	goveralls -service=travis-ci
 
 watch:
 	ls */*.go | entr make test

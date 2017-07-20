@@ -6,7 +6,7 @@ go:
 
 jobs:
   include:
-    - script: make check lint test
+    - script: make vet check lint coveralls
     - script: PATH=bin/linux/amd64:$PATH make build acceptance
     - stage: deploy
       script: skip
