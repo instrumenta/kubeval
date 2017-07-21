@@ -18,6 +18,12 @@
   [ "$output" = "The document fixtures/int_or_string.yaml contains a valid Service" ]
 }
 
+@test "Pass when parsing a valid Kubernetes config file with null arrays" {
+  run kubeval fixtures/null_array.yaml
+	[ "$status" -eq 0 ]
+  [ "$output" = "The document fixtures/null_array.yaml contains a valid Deployment" ]
+}
+
 @test "Pass when parsing a multi-document config file" {
   run kubeval fixtures/multi_valid.yaml
 	[ "$status" -eq 0 ]

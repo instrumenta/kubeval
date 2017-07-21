@@ -20,6 +20,7 @@ func TestValidateValidInputs(t *testing.T) {
 		"valid.json",
 		"multi_valid.yaml",
 		"int_or_string.yaml",
+		"null_array.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
