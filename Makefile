@@ -9,24 +9,28 @@ LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildSHA=$(shell git rev-parse HEAD)"
 # Strip debug information
 LDFLAGS += -s
 
+ifeq ($(OS),Windows_NT)
+	suffix := .exe
+endif
+
 all: build
 
-$(GOPATH)/bin/glide:
+$(GOPATH)/bin/glide$(suffix):
 	go get github.com/Masterminds/glide
 
-$(GOPATH)/bin/golint:
+$(GOPATH)/bin/golint$(suffix):
 	go get github.com/golang/lint/golint
 
-$(GOPATH)/bin/goveralls:
+$(GOPATH)/bin/goveralls$(suffix):
 	go get github.com/mattn/goveralls
 
-$(GOPATH)/bin/errcheck:
+$(GOPATH)/bin/errcheck$(suffix):
 	go get -u github.com/kisielk/errcheck
 
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
 
-glide.lock: glide.yaml $(GOPATH)/bin/glide
+glide.lock: glide.yaml $(GOPATH)/bin/glide$(suffix)
 	glide update
 	@touch $@
 
@@ -34,7 +38,7 @@ vendor: glide.lock
 	glide install
 	@touch $@
 
-check: vendor $(GOPATH)/bin/errcheck
+check: vendor $(GOPATH)/bin/errcheck$(suffix)
 	errcheck
 
 releases:
@@ -60,10 +64,10 @@ linux: vendor releases bin/linux/amd64
 	tar -cvzf releases/$(NAME)-linux-amd64.tar.gz bin/linux/amd64/$(NAME)
 
 windows: vendor releases bin/windows/amd64
-	env GOOS=windows GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/windows/amd64/$(NAME)
-	tar -cvzf releases/$(NAME)-windows-amd64.tar.gz bin/windows/amd64/$(NAME)
+	env GOOS=windows GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/windows/amd64/$(NAME).exe
+	tar -cvzf releases/$(NAME)-windows-amd64.tar.gz bin/windows/amd64/$(NAME).exe
 
-lint: $(GOPATH)/bin/golint
+lint: $(GOPATH)/bin/golint$(suffix)
 	golint
 
 docker:
@@ -80,7 +84,7 @@ vet:
 test: vendor vet lint check
 	go test -v -cover `glide novendor`
 
-coveralls: vendor $(GOPATH)/bin/goveralls
+coveralls: vendor $(GOPATH)/bin/goveralls$(suffix)
 	goveralls -service=travis-ci
 
 watch:
@@ -96,6 +100,7 @@ cover:
 
 clean:
 	rm -fr releases bin
+
 
 fmt:
 	gofmt -w $(GOFMT_FILES)
