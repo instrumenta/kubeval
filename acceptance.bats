@@ -6,6 +6,12 @@
   [ "$output" = "The document fixtures/valid.yaml contains a valid ReplicationController" ]
 }
 
+@test "Pass when parsing a valid Kubernetes config YAML file on stdin" {
+  run bash -c "cat fixtures/valid.yaml | kubeval"
+	[ "$status" -eq 0 ]
+  [ "$output" = "The document stdin contains a valid ReplicationController" ]
+}
+
 @test "Pass when parsing a valid Kubernetes config JSON file" {
   run kubeval fixtures/valid.json
 	[ "$status" -eq 0 ]
@@ -43,6 +49,11 @@
 
 @test "Fail when parsing an invalid Kubernetes config file" {
   run kubeval fixtures/invalid.yaml
+	[ "$status" -eq 1 ]
+}
+
+@test "Fail when parsing an invalid Kubernetes config file on stdin" {
+  run bash -c "cat fixtures/invalid.yaml | kubeval"
 	[ "$status" -eq 1 ]
 }
 
