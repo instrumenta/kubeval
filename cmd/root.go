@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"bufio"
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/cobra"
 
@@ -21,40 +24,72 @@ var RootCmd = &cobra.Command{
 			printVersion()
 			os.Exit(0)
 		}
-		if len(args) < 1 {
-			log.Error("You must pass at least one file as an argument")
-			os.Exit(1)
-		}
 		success := true
-		for _, fileName := range args {
-			filePath, _ := filepath.Abs(fileName)
-			fileContents, err := ioutil.ReadFile(filePath)
-			if err != nil {
-				log.Error("Could not open file", fileName)
+		windowsStdinIssue := false
+		stat, err := os.Stdin.Stat()
+		if err != nil {
+			// Stat() will return an error on Windows in both Powershell and
+			// console until go1.9 when nothing is passed on stdin.
+			// See https://github.com/golang/go/issues/14853.
+			if runtime.GOOS != "windows" {
+				log.Error(err)
 				os.Exit(1)
+			} else {
+				windowsStdinIssue = true
 			}
-			results, err := kubeval.Validate(fileContents, fileName)
+		}
+		// We detect whether we have anything on stdin to process
+		if !windowsStdinIssue && ((stat.Mode() & os.ModeCharDevice) == 0) {
+			var buffer bytes.Buffer
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				buffer.WriteString(scanner.Text() + "\n")
+			}
+			results, err := kubeval.Validate(buffer.Bytes(), "stdin")
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
 			}
-
-			for _, result := range results {
-				if len(result.Errors) > 0 {
-					success = false
-					log.Warn("The document", result.FileName, "contains an invalid", result.Kind)
-					for _, desc := range result.Errors {
-						log.Info("--->", desc)
-					}
-				} else {
-					log.Success("The document", result.FileName, "contains a valid", result.Kind)
+			success = logResults(results, success)
+		} else {
+			if len(args) < 1 {
+				log.Error("You must pass at least one file as an argument")
+				os.Exit(1)
+			}
+			for _, fileName := range args {
+				filePath, _ := filepath.Abs(fileName)
+				fileContents, err := ioutil.ReadFile(filePath)
+				if err != nil {
+					log.Error("Could not open file", fileName)
+					os.Exit(1)
 				}
+				results, err := kubeval.Validate(fileContents, fileName)
+				if err != nil {
+					log.Error(err)
+					os.Exit(1)
+				}
+				success = logResults(results, success)
 			}
 		}
 		if !success {
 			os.Exit(1)
 		}
 	},
+}
+
+func logResults(results []kubeval.ValidationResult, success bool) bool {
+	for _, result := range results {
+		if len(result.Errors) > 0 {
+			success = false
+			log.Warn("The document", result.FileName, "contains an invalid", result.Kind)
+			for _, desc := range result.Errors {
+				log.Info("--->", desc)
+			}
+		} else {
+			log.Success("The document", result.FileName, "contains a valid", result.Kind)
+		}
+	}
+	return success
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

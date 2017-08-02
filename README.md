@@ -19,6 +19,18 @@ $ echo $?
 1
 ```
 
+Alternatively kubeval can also take input via `stdin` which can make using
+it as part of an automated pipeline easier.
+
+```
+$ cat my-invalid-rc.yaml | kubeval
+The document my-invalid-rc.yaml contains an invalid ReplicationController
+--> spec.replicas: Invalid type. Expected: integer, given: string
+$ echo $?
+1
+```
+
+
 ## Why?
 
 * If you're writing Kubernetes configuration files by hand it is useful
