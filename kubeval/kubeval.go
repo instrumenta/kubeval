@@ -39,8 +39,9 @@ type ValidationResult struct {
 }
 
 // lineBreak returns the relevant platform specific line ending
-func lineBreak() string {
-	if runtime.GOOS == "windows" {
+func detectLineBreak(haystack []byte) string {
+	windowsLineEnding := bytes.Contains(haystack, []byte("\r\n"))
+	if windowsLineEnding && runtime.GOOS == "windows" {
 		return "\r\n"
 	}
 	return "\n"
@@ -131,7 +132,7 @@ func Validate(config []byte, fileName string) ([]ValidationResult, error) {
 		return nil, errors.New("The document " + fileName + " appears to be empty")
 	}
 
-	bits := bytes.Split(config, []byte("---" + lineBreak()))
+	bits := bytes.Split(config, []byte("---" + detectLineBreak(config)))
 
 	results := make([]ValidationResult, 0)
 	var errors *multierror.Error
