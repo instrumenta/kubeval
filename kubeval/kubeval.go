@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"runtime"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/xeipuuv/gojsonschema"
@@ -35,6 +36,14 @@ type ValidationResult struct {
 	FileName string
 	Kind     string
 	Errors   []gojsonschema.ResultError
+}
+
+// lineBreak returns the relevant platform specific line ending
+func lineBreak() string {
+	if runtime.GOOS == "windows" {
+		return "\r\n"
+	}
+	return "\n"
 }
 
 func determineSchema(kind string) string {
@@ -122,14 +131,14 @@ func Validate(config []byte, fileName string) ([]ValidationResult, error) {
 		return nil, errors.New("The document " + fileName + " appears to be empty")
 	}
 
-	bits := bytes.Split(config, []byte("---\n"))
+	bits := bytes.Split(config, []byte("---" + lineBreak()))
 
-	results := make([]ValidationResult, len(bits))
+	results := make([]ValidationResult, 0)
 	var errors *multierror.Error
-	for i, element := range bits {
+	for _, element := range bits {
 		if len(element) > 0 {
 			result, err := validateResource(element, fileName)
-			results[i] = result
+			results = append(results, result)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
