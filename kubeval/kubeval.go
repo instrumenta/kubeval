@@ -38,7 +38,7 @@ type ValidationResult struct {
 	Errors   []gojsonschema.ResultError
 }
 
-// lineBreak returns the relevant platform specific line ending
+// detectLineBreak returns the relevant platform specific line ending
 func detectLineBreak(haystack []byte) string {
 	windowsLineEnding := bytes.Contains(haystack, []byte("\r\n"))
 	if windowsLineEnding && runtime.GOOS == "windows" {
