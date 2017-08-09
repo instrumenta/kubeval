@@ -103,6 +103,7 @@ func Execute() {
 
 func init() {
 	RootCmd.Flags().StringVarP(&kubeval.Version, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
+	RootCmd.Flags().StringVarP(&kubeval.SchemaLocation, "schema-location", "", "https://raw.githubusercontent.com/garethr", "Schema location, defaults to maintener github repo")
 	RootCmd.Flags().BoolVarP(&kubeval.OpenShift, "openshift", "", false, "Use OpenShift schemas instead of upstream Kubernetes")
 	RootCmd.Flags().BoolVarP(&Version, "version", "", false, "Display the kubeval version information and exit")
 }
