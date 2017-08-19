@@ -86,6 +86,15 @@ func TestDetermineSchemaForVersions(t *testing.T) {
 	}
 }
 
+func TestDetermineSchemaForSchemaLocation(t *testing.T) {
+	SchemaLocation = "file:///home/me"
+	schema := determineSchema("sample")
+	expectedSchema := "file:///home/me/openshift-json-schema/master/v1.0-standalone/sample.json"
+	if schema != expectedSchema {
+		t.Errorf("Should be able to specify a schema location, expected %s, got %s instead ", expectedSchema, schema)
+	}
+}
+
 func TestDetermineKind(t *testing.T) {
 	_, err := determineKind("sample")
 	if err == nil {
