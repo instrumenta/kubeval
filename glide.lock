@@ -1,5 +1,5 @@
-hash: f95ca47dd12b1bdbb09bee308035863865c964aacdcfc6083a34a0756610ae56
-updated: 2017-07-27T09:20:16.5105133+01:00
+hash: a8f1c32432725d048acd212267b87ac65a45259a64492371e95ff9357458098c
+updated: 2017-08-19T13:33:31.5843424+01:00
 imports:
 - name: github.com/fatih/color
   version: 570b54cabe6b8eb0bc2dfce68d964677d63b5260
@@ -19,6 +19,8 @@ imports:
   version: 34594c771f2c18301dc152640ad40ece28795373
 - name: github.com/spf13/pflag
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+- name: github.com/spf13/viper
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/xeipuuv/gojsonpointer
   version: 6fe8760cad3569743d51ddbb243b26f8456742dc
 - name: github.com/xeipuuv/gojsonreference

@@ -74,9 +74,15 @@ docker:
 	docker build -t garethr/kubeval:$(TAG) .
 	docker tag garethr/kubeval:$(TAG) garethr/kubeval:latest
 
-publish: docker
+docker-offline:
+	docker build -f Dockerfile.offline -t garethr/kubeval:$(TAG)-offline .
+	docker tag garethr/kubeval:$(TAG)-offline garethr/kubeval:offline
+
+publish: docker docker-offline
 	docker push garethr/kubeval:$(TAG)
 	docker push garethr/kubeval:latest
+	docker push garethr/kubeval:$(TAG)-offline
+	docker push garethr/kubeval:offline
 
 vet:
 	go vet `glide novendor`

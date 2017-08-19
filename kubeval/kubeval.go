@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strings"
 	"runtime"
+	"strings"
 
+	"github.com/spf13/viper"
 	"github.com/hashicorp/go-multierror"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
@@ -15,6 +16,14 @@ import (
 // Version represents the version of Kubernetes
 // for which we should load the schema
 var Version string
+
+// SchemaLocation represents what is the schema location,
+/// where default value is maintener github project, but can be overriden
+/// to either different github repo, or a local file
+var SchemaLocation string
+
+// DefaultSchemaLocation is the default value for
+var DefaultSchemaLocation = "https://raw.githubusercontent.com/garethr"
 
 // OpenShift represents whether to test against
 // upstream Kubernetes of the OpenShift schemas
@@ -69,7 +78,20 @@ func determineSchema(kind string) string {
 		normalisedVersion = "v" + normalisedVersion
 	}
 
-	return fmt.Sprintf("https://raw.githubusercontent.com/garethr/%s-json-schema/master/%s-standalone/%s.json", schemaType, normalisedVersion, strings.ToLower(kind))
+	// Check Viper for environment variable support first.
+	// Then check for an override in SchemaLocation
+	// Finally settle on the default value
+	baseURLFromEnv := viper.GetString("schema_location")
+	var baseURL string
+	if baseURLFromEnv != "" {
+		baseURL = baseURLFromEnv
+	} else if SchemaLocation == "" {
+		baseURL = DefaultSchemaLocation
+	} else {
+		baseURL = SchemaLocation
+	}
+
+	return fmt.Sprintf("%s/%s-json-schema/master/%s-standalone/%s.json", baseURL, schemaType, normalisedVersion, strings.ToLower(kind))
 }
 
 func determineKind(body interface{}) (string, error) {
@@ -113,7 +135,7 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 
 	results, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		return result, errors.New("Problem loading schema from the network")
+		return result, fmt.Errorf("Problem loading schema from the network at %s: %s", schema, err)
 	}
 
 	if results.Valid() {
@@ -132,7 +154,7 @@ func Validate(config []byte, fileName string) ([]ValidationResult, error) {
 		return nil, errors.New("The document " + fileName + " appears to be empty")
 	}
 
-	bits := bytes.Split(config, []byte("---" + detectLineBreak(config)))
+	bits := bytes.Split(config, []byte("---"+detectLineBreak(config)))
 
 	results := make([]ValidationResult, 0)
 	var errors *multierror.Error

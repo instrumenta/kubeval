@@ -1,0 +1,20 @@
+FROM golang:1.8-alpine as builder
+RUN apk --no-cache add make git
+RUN mkdir -p /go/src/github.com/garethr/kubeval/
+COPY . /go/src/github.com/garethr/kubeval/
+WORKDIR /go/src/github.com/garethr/kubeval/
+RUN make linux
+
+FROM alpine:latest as schemas
+RUN apk --no-cache add git
+RUN git clone https://github.com/garethr/kubernetes-json-schema.git
+RUN git clone https://github.com/garethr/openshift-json-schema.git
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+COPY --from=builder /go/src/github.com/garethr/kubeval/bin/linux/amd64/kubeval .
+COPY --from=schemas /kubernetes-json-schema /schemas/kubernetes-json-schema/master
+COPY --from=schemas /openshift-json-schema /schemas/openshift-json-schema/master
+ENV KUBEVAL_SCHEMA_LOCATION=file:///schemas
+ENTRYPOINT ["/kubeval"]
+CMD ["--help"]
