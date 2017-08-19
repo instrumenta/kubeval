@@ -6,3 +6,5 @@ import:
 - package: github.com/fatih/color
   version: ^1.5.0
 - package: github.com/hashicorp/go-multierror
+- package: github.com/spf13/viper
+  version: ^1.0.0

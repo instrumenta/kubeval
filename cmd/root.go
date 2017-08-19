@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/garethr/kubeval/kubeval"
 	"github.com/garethr/kubeval/log"
@@ -102,8 +103,11 @@ func Execute() {
 }
 
 func init() {
+	viper.SetEnvPrefix("KUBEVAL")
+	viper.AutomaticEnv()
 	RootCmd.Flags().StringVarP(&kubeval.Version, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
-	RootCmd.Flags().StringVarP(&kubeval.SchemaLocation, "schema-location", "", "https://raw.githubusercontent.com/garethr", "Schema location, defaults to maintener github repo")
+	RootCmd.Flags().StringVarP(&kubeval.SchemaLocation, "schema-location", "", kubeval.DefaultSchemaLocation, "Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION")
 	RootCmd.Flags().BoolVarP(&kubeval.OpenShift, "openshift", "", false, "Use OpenShift schemas instead of upstream Kubernetes")
 	RootCmd.Flags().BoolVarP(&Version, "version", "", false, "Display the kubeval version information and exit")
+	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
 }

@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/spf13/viper"
 	"github.com/hashicorp/go-multierror"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
@@ -19,7 +20,10 @@ var Version string
 // SchemaLocation represents what is the schema location,
 /// where default value is maintener github project, but can be overriden
 /// to either different github repo, or a local file
-var SchemaLocation = "https://raw.githubusercontent.com/garethr"
+var SchemaLocation string
+
+// DefaultSchemaLocation is the default value for
+var DefaultSchemaLocation = "https://raw.githubusercontent.com/garethr"
 
 // OpenShift represents whether to test against
 // upstream Kubernetes of the OpenShift schemas
@@ -74,7 +78,20 @@ func determineSchema(kind string) string {
 		normalisedVersion = "v" + normalisedVersion
 	}
 
-	return fmt.Sprintf("%s/%s-json-schema/master/%s-standalone/%s.json", SchemaLocation, schemaType, normalisedVersion, strings.ToLower(kind))
+	// Check Viper for environment variable support first.
+	// Then check for an override in SchemaLocation
+	// Finally settle on the default value
+	baseURLFromEnv := viper.GetString("schema_location")
+	var baseURL string
+	if baseURLFromEnv != "" {
+		baseURL = baseURLFromEnv
+	} else if SchemaLocation == "" {
+		baseURL = DefaultSchemaLocation
+	} else {
+		baseURL = SchemaLocation
+	}
+
+	return fmt.Sprintf("%s/%s-json-schema/master/%s-standalone/%s.json", baseURL, schemaType, normalisedVersion, strings.ToLower(kind))
 }
 
 func determineKind(body interface{}) (string, error) {
@@ -118,7 +135,7 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 
 	results, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		return result, fmt.Errorf("Problem loading schema from the network %s", err)
+		return result, fmt.Errorf("Problem loading schema from the network at %s", schema)
 	}
 
 	if results.Valid() {

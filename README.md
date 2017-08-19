@@ -118,9 +118,13 @@ Validate a Kubernetes YAML file against the relevant schema
 Usage:
   kubeval <file> [file...] [flags]
 
-Flags:
-  -v, --kubernetes-version string   Version of Kubernetes to validate against (default "master")
-      --openshift                   Use OpenShift schemas instead of upstream Kubernetes
+  Flags:
+    -h, --help                        help for kubeval
+    -v, --kubernetes-version string   Version of Kubernetes to validate against (default "master")
+        --openshift                   Use OpenShift schemas instead of upstream Kubernetes
+        --schema-location string      Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION (default "https://raw.githubusercontent.com/garethr")
+        --version                     Display the kubeval version information and exit
+
 ```
 
 The command has three important features:
