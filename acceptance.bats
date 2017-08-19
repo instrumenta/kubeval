@@ -18,6 +18,12 @@
   [ "$output" = "The document fixtures/valid.json contains a valid Deployment" ]
 }
 
+@test "Pass when parsing a Kubernetes file with string and integer quantities" {
+  run kubeval fixtures/quantity.yaml
+	[ "$status" -eq 0 ]
+  [ "$output" = "The document fixtures/quantity.yaml contains a valid LimitRange" ]
+}
+
 @test "Pass when parsing a valid Kubernetes config file with int_to_string vars" {
   run kubeval fixtures/int_or_string.yaml
 	[ "$status" -eq 0 ]
