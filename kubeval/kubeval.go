@@ -135,7 +135,7 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 
 	results, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	if err != nil {
-		return result, fmt.Errorf("Problem loading schema from the network at %s", schema)
+		return result, fmt.Errorf("Problem loading schema from the network at %s: %s", schema, err)
 	}
 
 	if results.Valid() {
