@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Read this before creating packages: https://chocolatey.org/docs/create-packages -->
+<!-- It is especially important to read the above link to understand additional requirements when publishing packages to the community feed aka dot org (https://chocolatey.org/packages). -->
+
+<!-- Test your packages in a test environment: https://github.com/chocolatey/chocolatey-test-environment -->
+
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>kubeval</id>
+    <version>0.6.0</version>
+    <packageSourceUrl>https://github.com/garethr/kubeval/tree/master/chocolatey/kubeval</packageSourceUrl>
+    <owners>Gareth Rushgrove</owners>
+    <title>kubeval</title>
+    <authors>Gareth Rushgrove</authors>
+    <projectUrl>https://github.com/garethr/kubeval</projectUrl>
+    <copyright>2017 Gareth Rushgrove</copyright>
+    <licenseUrl>https://github.com/garethr/kubeval/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/garethr/kubeval.git</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/garethr/kubeval/issues</bugTrackerUrl>
+    <tags>kubeval kubernetes</tags>
+    <summary>Validate your Kubernetes configuration files, supports multiple Kubernetes versions</summary>
+    <description>Validate your Kubernetes configuration files, supports multiple Kubernetes versions</description>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

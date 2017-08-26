@@ -118,8 +118,19 @@ cover:
 clean:
 	rm -fr releases bin
 
-
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check
+checksum-32:
+	cd releases && checksum -f $(NAME)-windows-386.zip -t=sha256
+
+checksum-64:
+	cd releases && checksum -f $(NAME)-windows-amd64.zip -t=sha256
+
+chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
+	cd chocolatey/$(NAME) && choco pack
+
+choco:
+	cd chocolatey/$(NAME) && choco push $(NAME).$(TAG).nupkg -s https://chocolatey.org/
+
+.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check checksum-32 checksum-64 choco
