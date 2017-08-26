@@ -50,6 +50,9 @@ bin/linux/amd64:
 bin/windows/amd64:
 	mkdir -p bin/windows/amd64
 
+bin/windows/386:
+	mkdir -p bin/windows/386
+
 bin/darwin/amd64:
 	mkdir -p bin/darwin/amd64
 
@@ -57,15 +60,23 @@ build: darwin linux windows
 
 darwin: vendor releases bin/darwin/amd64
 	env GOOS=darwin GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/darwin/amd64/$(NAME)
-	tar -cvzf releases/$(NAME)-darwin-amd64.tar.gz bin/darwin/amd64/$(NAME)
+	tar -C bin/darwin/amd64 -cvzf releases/$(NAME)-darwin-amd64.tar.gz $(NAME)
 
 linux: vendor releases bin/linux/amd64
 	env GOOS=linux GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/linux/amd64/$(NAME)
-	tar -cvzf releases/$(NAME)-linux-amd64.tar.gz bin/linux/amd64/$(NAME)
+	tar -C bin/linux/amd64 -cvzf releases/$(NAME)-linux-amd64.tar.gz $(NAME)
 
-windows: vendor releases bin/windows/amd64
+windows: windows-64 windows-32
+
+windows-64: vendor releases bin/windows/amd64
 	env GOOS=windows GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/windows/amd64/$(NAME).exe
-	tar -cvzf releases/$(NAME)-windows-amd64.tar.gz bin/windows/amd64/$(NAME).exe
+	tar -C bin/windows/amd64 -cvzf releases/$(NAME)-windows-amd64.tar.gz $(NAME).exe
+	cd bin/windows/amd64 && zip ../../../releases/$(NAME)-windows-amd64.zip $(NAME).exe
+
+windows-32: vendor releases bin/windows/386
+	env GOOS=windows GOAARCH=386 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/windows/386/$(NAME).exe
+	tar -C bin/windows/386 -cvzf releases/$(NAME)-windows-386.tar.gz $(NAME).exe
+	cd bin/windows/386 && zip ../../../releases/$(NAME)-windows-386.zip $(NAME).exe
 
 lint: $(GOPATH)/bin/golint$(suffix)
 	golint
