@@ -121,11 +121,14 @@ clean:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-checksum-32:
+checksum-windows-386:
 	cd releases && checksum -f $(NAME)-windows-386.zip -t=sha256
 
-checksum-64:
+checksum-windows-amd64:
 	cd releases && checksum -f $(NAME)-windows-amd64.zip -t=sha256
+
+checksum-darwin:
+	cd releases && checksum -f $(NAME)-darwin-amd64.tar.gz -t=sha256
 
 chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 	cd chocolatey/$(NAME) && choco pack
