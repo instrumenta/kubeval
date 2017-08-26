@@ -1,4 +1,5 @@
 NAME=kubeval
+IMAGE_NAME=garethr/$(NAME)
 PACKAGE_NAME=github.com/garethr/$(NAME)
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
 TAG=$$(git describe --abbrev=0 --tags)
@@ -82,18 +83,18 @@ lint: $(GOPATH)/bin/golint$(suffix)
 	golint
 
 docker:
-	docker build -t garethr/kubeval:$(TAG) .
-	docker tag garethr/kubeval:$(TAG) garethr/kubeval:latest
+	docker build -t $(IMAGE_NAME):$(TAG) .
+	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):latest
 
 docker-offline:
-	docker build -f Dockerfile.offline -t garethr/kubeval:$(TAG)-offline .
-	docker tag garethr/kubeval:$(TAG)-offline garethr/kubeval:offline
+	docker build -f Dockerfile.offline -t $(IMAGE_NAME):$(TAG)-offline .
+	docker tag $(IMAGE_NAME):$(TAG)-offline $(IMAGE_NAME):offline
 
 publish: docker docker-offline
-	docker push garethr/kubeval:$(TAG)
-	docker push garethr/kubeval:latest
-	docker push garethr/kubeval:$(TAG)-offline
-	docker push garethr/kubeval:offline
+	docker push $(IMAGE_NAME):$(TAG)
+	docker push $(IMAGE_NAME):latest
+	docker push $(IMAGE_NAME):$(TAG)-offline
+	docker push $(IMAGE_NAME):offline
 
 vet:
 	go vet `glide novendor`
@@ -111,7 +112,7 @@ acceptance: .bats
 	env PATH=./.bats/bin:$$PATH:./bin/darwin/amd64 ./acceptance.bats
 
 cover:
-	go test -v ./kubeval -coverprofile=coverage.out
+	go test -v ./$(NAME) -coverprofile=coverage.out
 	go tool cover -html=coverage.out
 	rm coverage.out
 
@@ -136,4 +137,4 @@ chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 choco:
 	cd chocolatey/$(NAME) && choco push $(NAME).$(TAG).nupkg -s https://chocolatey.org/
 
-.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check checksum-32 checksum-64 choco
+.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check checksum-windows-386 checksum-windows-amd64 checksum-darwin choco
