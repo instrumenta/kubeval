@@ -17,6 +17,9 @@ jobs:
         file:
         - releases/kubeval-darwin-amd64.tar.gz
         - releases/kubeval-windows-amd64.tar.gz
+        - releases/kubeval-windows-amd64.zip
+        - releases/kubeval-windows-386.tar.gz
+        - releases/kubeval-windows-386.zip
         - releases/kubeval-linux-amd64.tar.gz
         on:
           repo: garethr/kubeval
