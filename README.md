@@ -78,6 +78,20 @@ tar xf kubeval-darwin-amd64.tar.gz
 cp kubeval /usr/local/bin
 ```
 
+Windows users can download tar or zip files from the releases, or for [Chocolatey](https://chocolatey.org)
+users you can install with:
+
+```
+choco install kubeval
+```
+
+For those on macOS using [Homebrew](https://brew.sh/) you can use the kubeval tap:
+
+```
+brew tap garethr/kubeval
+brew install kubeval
+```
+
 `kubeval` is also published as a Docker image. So can be used as
 follows:
 
