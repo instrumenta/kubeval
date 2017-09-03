@@ -29,6 +29,10 @@ var DefaultSchemaLocation = "https://raw.githubusercontent.com/garethr"
 // upstream Kubernetes of the OpenShift schemas
 var OpenShift bool
 
+// Strict tells kubeval whether to prohibit properties not in
+// the schema. The API allows them, but kubectl does not
+var Strict bool
+
 // ValidFormat is a type for quickly forcing
 // new formats on the gojsonschema loader
 type ValidFormat struct{}
@@ -91,7 +95,14 @@ func determineSchema(kind string) string {
 		baseURL = SchemaLocation
 	}
 
-	return fmt.Sprintf("%s/%s-json-schema/master/%s-standalone/%s.json", baseURL, schemaType, normalisedVersion, strings.ToLower(kind))
+	var strictSuffix string
+	if Strict {
+		strictSuffix = "-strict"
+	} else {
+		strictSuffix = ""
+	}
+
+	return fmt.Sprintf("%s/%s-json-schema/master/%s-standalone%s/%s.json", baseURL, schemaType, normalisedVersion, strictSuffix, strings.ToLower(kind))
 }
 
 func determineKind(body interface{}) (string, error) {
