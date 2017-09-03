@@ -22,6 +22,7 @@ func TestValidateValidInputs(t *testing.T) {
 		"int_or_string.yaml",
 		"null_array.yaml",
 		"quantity.yaml",
+		"extra_property.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
@@ -48,6 +49,17 @@ func TestValidateInvalidInputs(t *testing.T) {
 	}
 }
 
+
+func TestStrictCatchesAdditionalErrors(t *testing.T) {
+	Strict = true
+	filePath, _ := filepath.Abs("../fixtures/extra_property.yaml")
+	fileContents, _ := ioutil.ReadFile(filePath)
+	results, _ := Validate(fileContents, "extra_property.yaml")
+	if len(results[0].Errors) == 0 {
+		t.Errorf("Validate should not pass when testing for additional properties not in schema")
+	}
+}
+
 func TestValidateInputsWithErrors(t *testing.T) {
 	var tests = []string{
 		"invalid.yaml",
@@ -64,6 +76,7 @@ func TestValidateInputsWithErrors(t *testing.T) {
 }
 
 func TestDetermineSchema(t *testing.T) {
+	Strict = false
 	schema := determineSchema("sample")
 	if schema != "https://raw.githubusercontent.com/garethr/kubernetes-json-schema/master/master-standalone/sample.json" {
 		t.Errorf("Schema should default to master")

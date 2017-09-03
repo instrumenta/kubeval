@@ -42,7 +42,6 @@
   [ "$output" = "The document fixtures/null_string.yaml contains a valid Service" ]
 }
 
-
 @test "Pass when parsing a multi-document config file" {
   run kubeval fixtures/multi_valid.yaml
 	[ "$status" -eq 0 ]
@@ -78,4 +77,14 @@
 @test "Return relevant error for YAML missing kind key" {
   run kubeval fixtures/missing-kind.yaml
 	[ "$status" -eq 1 ]
+}
+
+@test "Fail when parsing a config with additional properties and strict set" {
+  run kubeval --strict fixtures/extra_property.yaml
+	[ "$status" -eq 1 ]
+}
+
+@test "Pass when parsing a config with additional properties" {
+  run kubeval fixtures/extra_property.yaml
+	[ "$status" -eq 0 ]
 }
