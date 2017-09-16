@@ -39,7 +39,7 @@ type ValidFormat struct{}
 
 // IsFormat always returns true and meets the
 // gojsonschema.FormatChecker interface
-func (f ValidFormat) IsFormat(input string) bool {
+func (f ValidFormat) IsFormat(input interface{}) bool {
 	return true
 }
 
