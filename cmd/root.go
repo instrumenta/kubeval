@@ -46,7 +46,7 @@ var RootCmd = &cobra.Command{
 			for scanner.Scan() {
 				buffer.WriteString(scanner.Text() + "\n")
 			}
-			results, err := kubeval.Validate(buffer.Bytes(), "stdin")
+			results, err := kubeval.Validate(buffer.Bytes(), viper.GetString("filename"))
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
@@ -111,4 +111,6 @@ func init() {
 	RootCmd.Flags().BoolVarP(&kubeval.Strict, "strict", "", false, "Disallow additional properties not in schema")
 	RootCmd.Flags().BoolVarP(&Version, "version", "", false, "Display the kubeval version information and exit")
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
+	RootCmd.PersistentFlags().StringP("filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")
+	viper.BindPFlag("filename", RootCmd.PersistentFlags().Lookup("filename"))
 }

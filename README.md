@@ -20,16 +20,28 @@ $ echo $?
 ```
 
 Alternatively kubeval can also take input via `stdin` which can make using
-it as part of an automated pipeline easier.
+it as part of an automated pipeline easier by removing the need to securely
+manage temporary files.
 
 ```
 $ cat my-invalid-rc.yaml | kubeval
-The document my-invalid-rc.yaml contains an invalid ReplicationController
+The document stdin contains an invalid ReplicationController
 --> spec.replicas: Invalid type. Expected: integer, given: string
 $ echo $?
 1
 ```
 
+To make the output of pipelines more readable, a filename can be injected
+to replace `stdin` in the output:
+
+```
+$ YAML=my-invalid-rc.yaml
+$ cat "$YAML" | kubeval --filename="$YAML"
+The document my-invalid-rc.yaml contains an invalid ReplicationController
+--> spec.replicas: Invalid type. Expected: integer, given: string
+$ echo $?
+1
+```
 
 ## Why?
 
