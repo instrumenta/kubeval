@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/spf13/viper"
 	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
 )
@@ -165,7 +165,7 @@ func Validate(config []byte, fileName string) ([]ValidationResult, error) {
 		return nil, errors.New("The document " + fileName + " appears to be empty")
 	}
 
-	bits := bytes.Split(config, []byte("---"+detectLineBreak(config)))
+	bits := bytes.Split(config, []byte(detectLineBreak(config)+"---"+detectLineBreak(config)))
 
 	results := make([]ValidationResult, 0)
 	var errors *multierror.Error
