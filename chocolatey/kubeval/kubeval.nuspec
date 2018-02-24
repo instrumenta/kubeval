@@ -8,7 +8,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>kubeval</id>
-    <version>0.7.0</version>
+    <version>0.7.1</version>
     <packageSourceUrl>https://github.com/garethr/kubeval/tree/master/chocolatey/kubeval</packageSourceUrl>
     <owners>Gareth Rushgrove</owners>
     <title>kubeval</title>

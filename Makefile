@@ -131,10 +131,21 @@ checksum-windows-amd64:
 checksum-darwin:
 	cd releases && checksum -f $(NAME)-darwin-amd64.tar.gz -t=sha256
 
+checksum-linux:
+	cd releases && checksum -f $(NAME)-linux-amd64.tar.gz -t=sha256
+
+checksums: download checksum-darwin checksum-windows-386 checksum-windows-amd64 checksum-linux
+
 chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 	cd chocolatey/$(NAME) && choco pack
 
 choco:
 	cd chocolatey/$(NAME) && choco push $(NAME).$(TAG).nupkg -s https://chocolatey.org/
 
-.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check checksum-windows-386 checksum-windows-amd64 checksum-darwin choco
+download:
+	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iwr -outf releases/$(NAME)-darwin-amd64.tar.gz https://$(PACKAGE_NAME)/releases/download/$(TAG)/$(NAME)-darwin-amd64.tar.gz"
+	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iwr -outf releases/$(NAME)-windows-amd64.zip https://$(PACKAGE_NAME)/releases/download/$(TAG)/$(NAME)-windows-amd64.zip"
+	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iwr -outf releases/$(NAME)-windows-386.zip https://$(PACKAGE_NAME)/releases/download/$(TAG)/$(NAME)-windows-386.zip"
+	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iwr -outf releases/$(NAME)-linux-amd64.tar.gz https://$(PACKAGE_NAME)/releases/download/$(TAG)/$(NAME)-linux-amd64.tar.gz"
+
+.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check checksum-windows-386 checksum-windows-amd64 checksum-darwin checksum-linux choco download checksum
