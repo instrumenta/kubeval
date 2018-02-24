@@ -98,7 +98,7 @@ vet:
 	go vet $(shell glide novendor)
 
 test: vendor vet lint check
-	go test -v -cover $(shell glide novendor)
+	go test -race -v -cover $(shell glide novendor)
 
 coveralls: vendor $(GOPATH)/bin/goveralls$(suffix)
 	goveralls -service=travis-ci
