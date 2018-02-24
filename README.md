@@ -72,8 +72,7 @@ in the filename (ie. windows, linux, darwin). Either execute that binary
 directly or place it on your path.
 
 ```
-wget
-https://github.com/garethr/kubeval/releases/download/0.6.0/kubeval-darwin-amd64.tar.gz
+wget https://github.com/garethr/kubeval/releases/download/0.6.0/kubeval-darwin-amd64.tar.gz
 tar xf kubeval-darwin-amd64.tar.gz
 cp kubeval /usr/local/bin
 ```
