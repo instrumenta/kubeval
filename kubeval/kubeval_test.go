@@ -37,7 +37,8 @@ func TestValidateValidInputs(t *testing.T) {
 func TestValidateInvalidInputs(t *testing.T) {
 	var tests = []string{
 		"blank.yaml",
-		"missing-kind.json",
+		"missing_kind.json",
+		"missing_kind_value.json",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
@@ -48,7 +49,6 @@ func TestValidateInvalidInputs(t *testing.T) {
 		}
 	}
 }
-
 
 func TestStrictCatchesAdditionalErrors(t *testing.T) {
 	Strict = true

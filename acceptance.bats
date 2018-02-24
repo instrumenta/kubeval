@@ -75,12 +75,17 @@
 }
 
 @test "Return relevant error for YAML missing kind key" {
-  run kubeval fixtures/missing-kind.yaml
+  run kubeval fixtures/missing_kind.yaml
   [ "$status" -eq 1 ]
 }
 
 @test "Fail when parsing a config with additional properties and strict set" {
   run kubeval --strict fixtures/extra_property.yaml
+  [ "$status" -eq 1 ]
+}
+
+@test "Fail when parsing a config with a kind key but no value" {
+  run kubeval fixtures/missing_kind_value.yaml
   [ "$status" -eq 1 ]
 }
 

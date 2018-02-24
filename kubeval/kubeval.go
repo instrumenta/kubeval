@@ -110,7 +110,9 @@ func determineKind(body interface{}) (string, error) {
 	if _, ok := cast["kind"]; !ok {
 		return "", errors.New("Missing a kind key")
 	}
-
+	if cast["kind"] == nil {
+		return "", errors.New("Missing a kind value")
+	}
 	return cast["kind"].(string), nil
 }
 
