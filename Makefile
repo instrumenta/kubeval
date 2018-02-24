@@ -2,7 +2,7 @@ NAME=kubeval
 IMAGE_NAME=garethr/$(NAME)
 PACKAGE_NAME=github.com/garethr/$(NAME)
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
-TAG=$$(git describe --abbrev=0 --tags)
+TAG=$(shell git describe --abbrev=0 --tags)
 
 LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
 LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildVersion=$(shell git describe --abbrev=0 --tags)"
@@ -33,11 +33,9 @@ $(GOPATH)/bin/errcheck$(suffix):
 
 glide.lock: glide.yaml $(GOPATH)/bin/glide$(suffix)
 	glide update
-	@touch $@
 
 vendor: glide.lock
 	glide install
-	@touch $@
 
 check: vendor $(GOPATH)/bin/errcheck$(suffix)
 	errcheck
@@ -97,10 +95,10 @@ publish: docker docker-offline
 	docker push $(IMAGE_NAME):offline
 
 vet:
-	go vet `glide novendor`
+	go vet $(shell glide novendor)
 
 test: vendor vet lint check
-	go test -v -cover `glide novendor`
+	go test -v -cover $(shell glide novendor)
 
 coveralls: vendor $(GOPATH)/bin/goveralls$(suffix)
 	goveralls -service=travis-ci
@@ -108,8 +106,10 @@ coveralls: vendor $(GOPATH)/bin/goveralls$(suffix)
 watch:
 	ls */*.go | entr make test
 
-acceptance: .bats
-	env PATH=./.bats/bin:$$PATH:./bin/darwin/amd64 ./acceptance.bats
+acceptance:
+	docker build -f Dockerfile.acceptance -t $(IMAGE_NAME):$(TAG)-acceptance .
+	docker tag $(IMAGE_NAME):$(TAG)-acceptance $(IMAGE_NAME):acceptance
+	docker run --rm -t $(IMAGE_NAME):acceptance
 
 cover:
 	go test -v ./$(NAME) -coverprofile=coverage.out
