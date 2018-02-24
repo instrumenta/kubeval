@@ -1,8 +1,7 @@
 README.md
 Dockerfile
 LICENSE
-acceptance.bat
 bin
-fixtures
 releases
 vendor
+.bats
