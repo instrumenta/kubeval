@@ -123,16 +123,16 @@ fmt:
 	gofmt -w $(GOFMT_FILES)
 
 checksum-windows-386:
-	cd releases && checksum -f $(NAME)-windows-386.zip -t=sha256
+	cd releases && powershell -Command "(Get-FileHash $(NAME)-windows-386.zip -Algorithm SHA256).Hash.ToLower()"
 
 checksum-windows-amd64:
-	cd releases && checksum -f $(NAME)-windows-amd64.zip -t=sha256
+	cd releases && powershell -Command "(Get-FileHash $(NAME)-windows-amd64.zip -Algorithm SHA256).Hash.ToLower()"
 
 checksum-darwin:
-	cd releases && checksum -f $(NAME)-darwin-amd64.tar.gz -t=sha256
+	cd releases && powershell -Command "(Get-FileHash $(NAME)-darwin-amd64.tar.gz -Algorithm SHA256).Hash.ToLower()"
 
 checksum-linux:
-	cd releases && checksum -f $(NAME)-linux-amd64.tar.gz -t=sha256
+	cd releases && powershell -Command "(Get-FileHash $(NAME)-linux-amd64.tar.gz -Algorithm SHA256).Hash.ToLower()"
 
 checksums: download checksum-darwin checksum-windows-386 checksum-windows-amd64 checksum-linux
 
