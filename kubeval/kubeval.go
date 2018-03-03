@@ -128,6 +128,11 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 	}
 
 	body := convertToStringKeys(spec)
+
+	if body == nil {
+		return result, nil
+	}
+
 	documentLoader := gojsonschema.NewGoLoader(body)
 
 	kind, err := determineKind(body)
