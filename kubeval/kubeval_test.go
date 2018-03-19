@@ -60,6 +60,18 @@ func TestStrictCatchesAdditionalErrors(t *testing.T) {
 	}
 }
 
+func TestValidateMultipleVersions(t *testing.T) {
+	Strict = true
+	Version = "1.7.11"
+	filePath, _ := filepath.Abs("../fixtures/valid_version.yaml")
+	fileContents, _ := ioutil.ReadFile(filePath)
+	results, err := Validate(fileContents, "valid_version.yaml")
+	Version = ""
+	if err != nil || len(results[0].Errors) > 0 {
+		t.Errorf("Validate should pass when testing valid configuration with multiple versions: %v", results[0].Errors)
+	}
+}
+
 func TestValidateInputsWithErrors(t *testing.T) {
 	var tests = []string{
 		"invalid.yaml",
@@ -77,7 +89,7 @@ func TestValidateInputsWithErrors(t *testing.T) {
 
 func TestDetermineSchema(t *testing.T) {
 	Strict = false
-	schema := determineSchema("sample")
+	schema := determineSchema("sample", "v1")
 	if schema != "https://raw.githubusercontent.com/garethr/kubernetes-json-schema/master/master-standalone/sample.json" {
 		t.Errorf("Schema should default to master")
 	}
@@ -85,7 +97,7 @@ func TestDetermineSchema(t *testing.T) {
 
 func TestDetermineSchemaForOpenShift(t *testing.T) {
 	OpenShift = true
-	schema := determineSchema("sample")
+	schema := determineSchema("sample", "v1")
 	if schema != "https://raw.githubusercontent.com/garethr/openshift-json-schema/master/master-standalone/sample.json" {
 		t.Errorf("Should be able to toggle to OpenShift schemas")
 	}
@@ -93,7 +105,7 @@ func TestDetermineSchemaForOpenShift(t *testing.T) {
 
 func TestDetermineSchemaForVersions(t *testing.T) {
 	Version = "1.0"
-	schema := determineSchema("sample")
+	schema := determineSchema("sample", "v1")
 	if schema != "https://raw.githubusercontent.com/garethr/openshift-json-schema/master/v1.0-standalone/sample.json" {
 		t.Errorf("Should be able to specify a version")
 	}
@@ -101,7 +113,7 @@ func TestDetermineSchemaForVersions(t *testing.T) {
 
 func TestDetermineSchemaForSchemaLocation(t *testing.T) {
 	SchemaLocation = "file:///home/me"
-	schema := determineSchema("sample")
+	schema := determineSchema("sample", "v1")
 	expectedSchema := "file:///home/me/openshift-json-schema/master/v1.0-standalone/sample.json"
 	if schema != expectedSchema {
 		t.Errorf("Should be able to specify a schema location, expected %s, got %s instead ", expectedSchema, schema)

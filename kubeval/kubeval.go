@@ -46,9 +46,10 @@ func (f ValidFormat) IsFormat(input interface{}) bool {
 // ValidationResult contains the details from
 // validating a given Kubernetes resource
 type ValidationResult struct {
-	FileName string
-	Kind     string
-	Errors   []gojsonschema.ResultError
+	FileName   string
+	Kind       string
+	APIVersion string
+	Errors     []gojsonschema.ResultError
 }
 
 // detectLineBreak returns the relevant platform specific line ending
@@ -60,7 +61,7 @@ func detectLineBreak(haystack []byte) string {
 	return "\n"
 }
 
-func determineSchema(kind string) string {
+func determineSchema(kind string, apiVersion string) string {
 	// We have both the upstream Kubernetes schemas and the OpenShift schemas available
 	// the tool can toggle between then using the --openshift boolean flag and here we
 	// use that to select which repository to get the schema from
@@ -102,7 +103,17 @@ func determineSchema(kind string) string {
 		strictSuffix = ""
 	}
 
-	return fmt.Sprintf("%s/%s-json-schema/master/%s-standalone%s/%s.json", baseURL, schemaType, normalisedVersion, strictSuffix, strings.ToLower(kind))
+	var kindSuffix string
+
+	versionParts := strings.Split(apiVersion, "/")
+
+	if len(versionParts) == 1 {
+		kindSuffix = strings.ToLower(versionParts[0])
+	} else {
+		kindSuffix = fmt.Sprintf("%s-%s", strings.ToLower(versionParts[0]), strings.ToLower(versionParts[1]))
+	}
+
+	return fmt.Sprintf("%s/%s-json-schema/master/%s-standalone%s/%s-%s.json", baseURL, schemaType, normalisedVersion, strictSuffix, strings.ToLower(kind), kindSuffix)
 }
 
 func determineKind(body interface{}) (string, error) {
@@ -114,6 +125,17 @@ func determineKind(body interface{}) (string, error) {
 		return "", errors.New("Missing a kind value")
 	}
 	return cast["kind"].(string), nil
+}
+
+func determineAPIVersion(body interface{}) (string, error) {
+	cast, _ := body.(map[string]interface{})
+	if _, ok := cast["apiVersion"]; !ok {
+		return "", errors.New("Missing a apiVersion key")
+	}
+	if cast["apiVersion"] == nil {
+		return "", errors.New("Missing a apiVersion value")
+	}
+	return cast["apiVersion"].(string), nil
 }
 
 // validateResource validates a single Kubernetes resource against
@@ -140,7 +162,14 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 		return result, err
 	}
 	result.Kind = kind
-	schema := determineSchema(kind)
+
+	apiVersion, err := determineAPIVersion(body)
+	if err != nil {
+		return result, err
+	}
+	result.APIVersion = apiVersion
+
+	schema := determineSchema(kind, apiVersion)
 
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
 
