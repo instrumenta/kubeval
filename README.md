@@ -96,7 +96,7 @@ users you can install with:
 choco install kubeval
 ```
 
-For those on macOS using [Homebrew](https://brew.sh/) you can use the kubeval tap:
+For those on macOS using [Homebrew](https://brew.sh/) or Linux using [Linuxbrew](https://http://linuxbrew.sh/) you can use the kubeval tap:
 
 ```
 brew tap garethr/kubeval
