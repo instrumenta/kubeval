@@ -16,5 +16,6 @@ COPY --from=builder /go/src/github.com/garethr/kubeval/bin/linux/amd64/kubeval .
 COPY --from=schemas /kubernetes-json-schema /schemas/kubernetes-json-schema/master
 COPY --from=schemas /openshift-json-schema /schemas/openshift-json-schema/master
 ENV KUBEVAL_SCHEMA_LOCATION=file:///schemas
+RUN ln -s /kubeval /usr/local/bin/kubeval
 ENTRYPOINT ["/kubeval"]
 CMD ["--help"]

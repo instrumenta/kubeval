@@ -8,5 +8,6 @@ RUN make linux
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /go/src/github.com/garethr/kubeval/bin/linux/amd64/kubeval .
+RUN ln -s /kubeval /usr/local/bin/kubeval
 ENTRYPOINT ["/kubeval"]
 CMD ["--help"]
