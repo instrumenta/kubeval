@@ -39,8 +39,8 @@ var RootCmd = &cobra.Command{
 				windowsStdinIssue = true
 			}
 		}
-		// We detect whether we have anything on stdin to process
-		if !windowsStdinIssue && ((stat.Mode() & os.ModeCharDevice) == 0) {
+		// We detect whether we have anything on stdin to process if we have no arguments
+		if len(args) < 1 && !windowsStdinIssue && ((stat.Mode() & os.ModeCharDevice) == 0) {
 			var buffer bytes.Buffer
 			scanner := bufio.NewScanner(os.Stdin)
 			for scanner.Scan() {
