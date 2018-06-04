@@ -86,6 +86,8 @@ func logResults(results []kubeval.ValidationResult, success bool) bool {
 			for _, desc := range result.Errors {
 				log.Info("--->", desc)
 			}
+		} else if result.Kind == "" {
+			log.Success("The document", result.FileName, "is empty")
 		} else {
 			log.Success("The document", result.FileName, "contains a valid", result.Kind)
 		}
