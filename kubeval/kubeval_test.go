@@ -38,8 +38,8 @@ func TestValidateValidInputs(t *testing.T) {
 
 func TestValidateInvalidInputs(t *testing.T) {
 	var tests = []string{
-		"missing_kind.json",
-		"missing_kind_value.json",
+		"missing_kind.yaml",
+		"missing_kind_value.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
