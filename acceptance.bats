@@ -68,11 +68,17 @@
   [ $(expr "$output" : "^Could not open file") -ne 0 ]
 }
 
-@test "Return relevant error for blank file" {
-  run kubeval fixtures/blank.yaml
-  [ "$status" -eq 1 ]
-  [ "$output" = "The document fixtures/blank.yaml appears to be empty" ]
-}
+@test "Pass when parsing a blank config file" {
+   run kubeval fixtures/blank.yaml
+   [ "$status" -eq 0 ]
+   [ "$output" = "The document fixtures/blank.yaml is empty" ]
+ }
+
+ @test "Pass when parsing a blank config file with a comment" {
+   run kubeval fixtures/comment.yaml
+   [ "$status" -eq 0 ]
+   [ "$output" = "The document fixtures/comment.yaml is empty" ]
+ }
 
 @test "Return relevant error for YAML missing kind key" {
   run kubeval fixtures/missing_kind.yaml

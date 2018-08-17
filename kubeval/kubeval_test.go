@@ -9,13 +9,15 @@ import (
 func TestValidateBlankInput(t *testing.T) {
 	blank := []byte("")
 	_, err := Validate(blank, "sample")
-	if err == nil {
-		t.Errorf("Validate should fail when passed a blank string")
+	if err != nil {
+		t.Errorf("Validate should pass when passed a blank string")
 	}
 }
 
 func TestValidateValidInputs(t *testing.T) {
 	var tests = []string{
+		"blank.yaml",
+		"comment.yaml",
 		"valid.yaml",
 		"valid.json",
 		"multi_valid.yaml",
@@ -36,9 +38,8 @@ func TestValidateValidInputs(t *testing.T) {
 
 func TestValidateInvalidInputs(t *testing.T) {
 	var tests = []string{
-		"blank.yaml",
-		"missing_kind.json",
-		"missing_kind_value.json",
+		"missing_kind.yaml",
+		"missing_kind_value.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
@@ -111,6 +112,6 @@ func TestDetermineSchemaForSchemaLocation(t *testing.T) {
 func TestDetermineKind(t *testing.T) {
 	_, err := determineKind("sample")
 	if err == nil {
-		t.Errorf("Shouldn't be able to find a kind  when passed a blank string")
+		t.Errorf("Shouldn't be able to find a kind when passed a blank string")
 	}
 }

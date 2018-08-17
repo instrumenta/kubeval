@@ -133,6 +133,11 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 		return result, nil
 	}
 
+	cast, _ := body.(map[string]interface{})
+	if len(cast) == 0 {
+		return result, nil
+	}
+
 	documentLoader := gojsonschema.NewGoLoader(body)
 
 	kind, err := determineKind(body)
@@ -168,13 +173,17 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 // and validating them all according to the  relevant schemas
 // TODO This function requires a judicious amount of refactoring.
 func Validate(config []byte, fileName string) ([]ValidationResult, error) {
+	results := make([]ValidationResult, 0)
+
 	if len(config) == 0 {
-		return nil, errors.New("The document " + fileName + " appears to be empty")
+		result := ValidationResult{}
+		result.FileName = fileName
+		results = append(results, result)
+		return results, nil
 	}
 
 	bits := bytes.Split(config, []byte(detectLineBreak(config)+"---"+detectLineBreak(config)))
 
-	results := make([]ValidationResult, 0)
 	var errors *multierror.Error
 	for _, element := range bits {
 		if len(element) > 0 {
@@ -183,6 +192,10 @@ func Validate(config []byte, fileName string) ([]ValidationResult, error) {
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
+		} else {
+			result := ValidationResult{}
+			result.FileName = fileName
+			results = append(results, result)
 		}
 	}
 	return results, errors.ErrorOrNil()
