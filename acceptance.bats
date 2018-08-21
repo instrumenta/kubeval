@@ -12,6 +12,12 @@
   [ "$output" = "The document stdin contains a valid ReplicationController" ]
 }
 
+@test "Pass when parsing a valid Kubernetes config YAML file explicitly on stdin" {
+  run bash -c "cat fixtures/valid.yaml | kubeval -"
+  [ "$status" -eq 0 ]
+  [ "$output" = "The document stdin contains a valid ReplicationController" ]
+}
+
 @test "Pass when parsing a valid Kubernetes config JSON file" {
   run kubeval fixtures/valid.json
   [ "$status" -eq 0 ]
