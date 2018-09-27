@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
+	"github.com/garethr/kubeval/utils"
 )
 
 // Version represents the version of Kubernetes
@@ -32,6 +33,9 @@ var OpenShift bool
 // Strict tells kubeval whether to prohibit properties not in
 // the schema. The API allows them, but kubectl does not
 var Strict bool
+
+// Tells to unpack gziped schemas before load
+var Unpack bool
 
 // ValidFormat is a type for quickly forcing
 // new formats on the gojsonschema loader
@@ -146,7 +150,11 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 	}
 	result.Kind = kind
 	schema := determineSchema(kind)
-
+	
+	// Unpack schema if gzipped
+	if Unpack {
+		unpackGzipFile(schema + '.gz', schema)
+	}
 	schemaLoader := gojsonschema.NewReferenceLoader(schema)
 
 	// Without forcing these types the schema fails to load
