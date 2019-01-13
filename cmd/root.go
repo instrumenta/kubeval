@@ -62,7 +62,7 @@ var RootCmd = &cobra.Command{
 				filePath, _ := filepath.Abs(fileName)
 				fileContents, err := ioutil.ReadFile(filePath)
 				if err != nil {
-					log.Error("Could not open file", fileName)
+					log.Error("Could not open file", fileName, err)
 					os.Exit(1)
 				}
 				results, err := kubeval.Validate(fileContents, fileName)
