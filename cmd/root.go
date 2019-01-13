@@ -15,6 +15,10 @@ import (
 	"github.com/garethr/kubeval/log"
 )
 
+// FileContent contains the content of a file to validate
+// the raw yaml
+var FileContent string
+
 // RootCmd represents the the command to run when kubeval is run
 var RootCmd = &cobra.Command{
 	Use:   "kubeval <file> [file...]",
@@ -54,8 +58,8 @@ var RootCmd = &cobra.Command{
 			}
 			success = logResults(results, success)
 		} else {
-			if len(args) < 1 {
-				log.Error("You must pass at least one file as an argument")
+			if len(args) < 1 && FileContent == "" {
+				log.Error("You must pass at least one file as an argument or provide the content via --file-content ")
 				os.Exit(1)
 			}
 			for _, fileName := range args {
@@ -66,6 +70,15 @@ var RootCmd = &cobra.Command{
 					os.Exit(1)
 				}
 				results, err := kubeval.Validate(fileContents, fileName)
+				if err != nil {
+					log.Error(err)
+					os.Exit(1)
+				}
+				success = logResults(results, success)
+			}
+
+			if FileContent != "" {
+				results, err := kubeval.Validate([]byte(FileContent), ">file-content passed as parameter<")
 				if err != nil {
 					log.Error(err)
 					os.Exit(1)
@@ -113,6 +126,7 @@ func init() {
 	RootCmd.Flags().BoolVarP(&kubeval.OpenShift, "openshift", "", false, "Use OpenShift schemas instead of upstream Kubernetes")
 	RootCmd.Flags().BoolVarP(&kubeval.Strict, "strict", "", false, "Disallow additional properties not in schema")
 	RootCmd.Flags().BoolVarP(&Version, "version", "", false, "Display the kubeval version information and exit")
+	RootCmd.Flags().StringVarP(&FileContent, "file-content", "", "", "Pass content of file to validate")
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
 	RootCmd.PersistentFlags().StringP("filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")
 	viper.BindPFlag("filename", RootCmd.PersistentFlags().Lookup("filename"))
