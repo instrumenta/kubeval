@@ -105,3 +105,23 @@
   run kubeval fixtures/extra_property.yaml
   [ "$status" -eq 0 ]
 }
+
+@test "GIVEN file with extra property WHEN content of file is passed with parameter --file-content THEN exit code is 0" {
+  run kubeval --file-content "$(cat fixtures/extra_property.yaml)"
+  [ "$status" -eq 0 ]
+  [ "$output" = "The document >file-content passed as parameter< contains a valid DaemonSet" ]
+}
+
+@test "GIVEN nothing WHEN nothing passed as input THEN exit code is 1 and message contains hint to parameter --file-content" {
+  run kubeval
+  echo marker
+  echo "$output"
+  [ "$status" -eq 1 ]
+  [ $(expr "$output" : "You must pass at least one file as an argument or provide the content via --file-content") -ne 0 ]
+}
+
+@test "GIVEN nothing WHEN help is THEN exit code is 0 and message contains hint to parameter --file-content" {
+  run kubeval --help
+  [ "$status" -eq 0 ]
+  [ $(expr "$output" : ".*--file-content.*string.*Pass content of file to validate.*") -ne 0 ]
+}
