@@ -4,7 +4,7 @@ services:
 - docker
 
 go:
-- 1.8
+- 1.11
 
 jobs:
   include:
