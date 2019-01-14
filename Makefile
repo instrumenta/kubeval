@@ -29,6 +29,7 @@ $(GOPATH)/bin/errcheck$(suffix):
 	go get -u github.com/kisielk/errcheck
 
 glide: $(GOPATH)/bin/glide$(suffix)
+	glide install
 
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
