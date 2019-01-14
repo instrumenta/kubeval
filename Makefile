@@ -28,10 +28,12 @@ $(GOPATH)/bin/goveralls$(suffix):
 $(GOPATH)/bin/errcheck$(suffix):
 	go get -u github.com/kisielk/errcheck
 
+glide: $(GOPATH)/bin/glide$(suffix)
+
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
 
-glide.lock: glide.yaml $(GOPATH)/bin/glide$(suffix)
+glide.lock: glide.yaml glide
 	glide update
 
 vendor: glide.lock
@@ -94,10 +96,10 @@ publish: docker docker-offline
 	docker push $(IMAGE_NAME):$(TAG)-offline
 	docker push $(IMAGE_NAME):offline
 
-vet:
+vet: glide
 	go vet $(shell glide novendor)
 
-test: vendor vet lint check
+test: vendor vet lint check glide
 	go test -race -v -cover $(shell glide novendor)
 
 coveralls: vendor $(GOPATH)/bin/goveralls$(suffix)
