@@ -191,7 +191,7 @@ The method signature for `Validate` is:
 Validate(config []byte, fileName string) ([]ValidationResult, error)
 ```
 
-The simples way of seeing it's usage is probably in the `kubeval`
+The simplest way of seeing it's usage is probably in the `kubeval`
 [command line tool source code](cmd/root.go).
 
 
