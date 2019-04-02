@@ -16,29 +16,14 @@ endif
 
 all: build
 
-$(GOPATH)/bin/glide$(suffix):
-	go get github.com/Masterminds/glide
-
 $(GOPATH)/bin/golint$(suffix):
 	go get github.com/golang/lint/golint
 
 $(GOPATH)/bin/goveralls$(suffix):
 	go get github.com/mattn/goveralls
 
-$(GOPATH)/bin/errcheck$(suffix):
-	go get -u github.com/kisielk/errcheck
-
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
-
-glide.lock: glide.yaml $(GOPATH)/bin/glide$(suffix)
-	glide update
-
-vendor: glide.lock
-	glide install
-
-check: vendor $(GOPATH)/bin/errcheck$(suffix)
-	errcheck
 
 releases:
 	mkdir -p releases
@@ -57,22 +42,22 @@ bin/darwin/amd64:
 
 build: darwin linux windows
 
-darwin: vendor releases bin/darwin/amd64
+darwin: releases bin/darwin/amd64
 	env CGO_ENABLED=0 GOOS=darwin GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/darwin/amd64/$(NAME)
 	tar -C bin/darwin/amd64 -cvzf releases/$(NAME)-darwin-amd64.tar.gz $(NAME)
 
-linux: vendor releases bin/linux/amd64
+linux: releases bin/linux/amd64
 	env CGO_ENABLED=0 GOOS=linux GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/linux/amd64/$(NAME)
 	tar -C bin/linux/amd64 -cvzf releases/$(NAME)-linux-amd64.tar.gz $(NAME)
 
 windows: windows-64 windows-32
 
-windows-64: vendor releases bin/windows/amd64
+windows-64: releases bin/windows/amd64
 	env CGO_ENABLED=0 GOOS=windows GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/windows/amd64/$(NAME).exe
 	tar -C bin/windows/amd64 -cvzf releases/$(NAME)-windows-amd64.tar.gz $(NAME).exe
 	cd bin/windows/amd64 && zip ../../../releases/$(NAME)-windows-amd64.zip $(NAME).exe
 
-windows-32: vendor releases bin/windows/386
+windows-32: releases bin/windows/386
 	env CGO_ENABLED=0 GOOS=windows GOAARCH=386 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/windows/386/$(NAME).exe
 	tar -C bin/windows/386 -cvzf releases/$(NAME)-windows-386.tar.gz $(NAME).exe
 	cd bin/windows/386 && zip ../../../releases/$(NAME)-windows-386.zip $(NAME).exe
@@ -95,12 +80,12 @@ publish: docker docker-offline
 	docker push $(IMAGE_NAME):offline
 
 vet:
-	go vet $(shell glide novendor)
+	go vet
 
-test: vendor vet lint check
-	go test -race -v -cover $(shell glide novendor)
+test: vet lint
+	go test -race -v -cover ./...
 
-coveralls: vendor $(GOPATH)/bin/goveralls$(suffix)
+coveralls: $(GOPATH)/bin/goveralls$(suffix)
 	goveralls -service=travis-ci
 
 watch:
