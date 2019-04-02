@@ -195,6 +195,40 @@ The simplest way of seeing it's usage is probably in the `kubeval`
 [command line tool source code](cmd/root.go).
 
 
+## Git pre-commit hook
+
+Add the following to K8s configs repository in `.git/hooks/pre-commit` to trigger `kubeval` before each commit.
+
+This will validate all the `yaml` files in the top directory of the repository.
+
+```bash
+#!/bin/sh
+
+echo "Running kubeval validations..."
+
+if ! [ -x "$(command -v kubeval)" ]; then
+  echo 'Error: kubeval is not installed.' >&2
+  echo 'Install it by running:' >&2
+  echo "\tbrew tap garethr/kubeval" >&2
+  echo "\tbrew install kubeval" >&2
+  exit 1
+fi
+
+# Inspect code using kubeval
+find . -maxdepth 1 -name '*.yaml' -exec kubeval {} \;
+
+status=$?
+
+if [ "$status" = 0 ] ; then
+    echo "Static analysis found no problems."
+    exit 0
+else
+    echo 1>&2 "Static analysis found violations that need to be fixed."
+    exit 1
+fi
+```
+
+
 ## Status
 
 `kubeval` should be useful now but can be obviously improved in a number
