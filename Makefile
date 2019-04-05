@@ -97,7 +97,6 @@ watch:
 acceptance:
 	docker build -f Dockerfile.acceptance -t $(IMAGE_NAME):$(TAG)-acceptance .
 	docker tag $(IMAGE_NAME):$(TAG)-acceptance $(IMAGE_NAME):acceptance
-	docker run --rm -t $(IMAGE_NAME):acceptance
 
 cover:
 	go test -v ./$(NAME) -coverprofile=coverage.out

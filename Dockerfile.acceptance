@@ -1,12 +1,11 @@
-FROM golang:1.8-alpine as builder
+FROM golang:1.12-alpine as builder
 RUN apk --no-cache add make git
-RUN mkdir -p /go/src/github.com/garethr/kubeval/
-COPY . /go/src/github.com/garethr/kubeval/
-WORKDIR /go/src/github.com/garethr/kubeval/
+WORKDIR /
+COPY . /
 RUN make linux
 
-FROM dduportal/bats:0.4.0
-COPY --from=builder /go/src/github.com/garethr/kubeval/bin/linux/amd64/kubeval /usr/local/bin
+FROM bats/bats:v1.1.0
+COPY --from=builder /bin/linux/amd64/kubeval /usr/local/bin
 COPY acceptance.bats /acceptance.bats
 COPY fixtures /fixtures
-CMD ["/acceptance.bats"]
+RUN "/acceptance.bats"
