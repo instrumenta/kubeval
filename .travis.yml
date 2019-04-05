@@ -5,6 +5,8 @@ services:
 
 go:
 - 1.12
+env:
+- GO111MODULE=on
 
 jobs:
   include:
