@@ -85,7 +85,7 @@ publish: docker docker-offline
 vet:
 	go vet
 
-test: vet lint
+test: vet
 	go test -race -v -cover ./...
 
 coveralls: $(GOPATH)/bin/goveralls$(suffix)

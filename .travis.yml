@@ -10,8 +10,8 @@ env:
 
 jobs:
   include:
-    - script: make vendor vet coveralls
-    - script: PATH=bin/linux/amd64:$PATH make build acceptance
+    - script: make vendor test
+    - script: PATH=bin/linux/amd64:$PATH make vendor build acceptance
     - stage: deploy
     - script: make build
       deploy:
