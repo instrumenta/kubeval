@@ -8,7 +8,7 @@ go:
 
 jobs:
   include:
-    - script: make vet check lint coveralls
+    - script: make dependencies vet lint coveralls
     - script: PATH=bin/linux/amd64:$PATH make build acceptance
     - stage: deploy
     - script: make build

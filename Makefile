@@ -22,6 +22,10 @@ $(GOPATH)/bin/golint$(suffix):
 $(GOPATH)/bin/goveralls$(suffix):
 	go get github.com/mattn/goveralls
 
+
+dependencies:
+	go mod download
+
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
 
