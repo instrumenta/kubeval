@@ -31,7 +31,7 @@ func TestValidateValidInputs(t *testing.T) {
 		fileContents, _ := ioutil.ReadFile(filePath)
 		_, err := Validate(fileContents, test)
 		if err != nil {
-			t.Errorf("Validate should pass when testing valid configuration in " + test)
+			t.Errorf("Validate should pass when testing valid configuration in" + test)
 		}
 	}
 }
@@ -61,6 +61,19 @@ func TestStrictCatchesAdditionalErrors(t *testing.T) {
 	}
 }
 
+func TestValidateMultipleVersions(t *testing.T) {
+	Strict = true
+	Version = "1.14.0"
+	OpenShift = false
+	filePath, _ := filepath.Abs("../fixtures/valid_version.yaml")
+	fileContents, _ := ioutil.ReadFile(filePath)
+	results, err := Validate(fileContents, "valid_version.yaml")
+	Version = ""
+	if err != nil || len(results[0].Errors) > 0 {
+		t.Errorf("Validate should pass when testing valid configuration with multiple versions: %v", err)
+	}
+}
+
 func TestValidateInputsWithErrors(t *testing.T) {
 	var tests = []string{
 		"invalid.yaml",
@@ -78,32 +91,36 @@ func TestValidateInputsWithErrors(t *testing.T) {
 
 func TestDetermineSchema(t *testing.T) {
 	Strict = false
-	schema := determineSchema("sample")
-	if schema != "https://raw.githubusercontent.com/garethr/kubernetes-json-schema/master/master-standalone/sample.json" {
-		t.Errorf("Schema should default to master")
-	}
-}
-
-func TestDetermineSchemaForOpenShift(t *testing.T) {
-	OpenShift = true
-	schema := determineSchema("sample")
-	if schema != "https://raw.githubusercontent.com/garethr/openshift-json-schema/master/master-standalone/sample.json" {
-		t.Errorf("Should be able to toggle to OpenShift schemas")
+	schema := determineSchema("sample", "v1")
+	if schema != "https://kubernetesjsonschema.dev/master-standalone/sample-v1.json" {
+		t.Errorf("Schema should default to master, instead %s", schema)
 	}
 }
 
 func TestDetermineSchemaForVersions(t *testing.T) {
 	Version = "1.0"
-	schema := determineSchema("sample")
-	if schema != "https://raw.githubusercontent.com/garethr/openshift-json-schema/master/v1.0-standalone/sample.json" {
-		t.Errorf("Should be able to specify a version")
+	OpenShift = false
+	schema := determineSchema("sample", "v1")
+	if schema != "https://kubernetesjsonschema.dev/v1.0-standalone/sample-v1.json" {
+		t.Errorf("Should be able to specify a version, instead %s", schema)
+	}
+}
+
+func TestDetermineSchemaForOpenShift(t *testing.T) {
+	OpenShift = true
+	Version = "master"
+	schema := determineSchema("sample", "v1")
+	if schema != "https://raw.githubusercontent.com/garethr/openshift-json-schema/master/master-standalone/sample.json" {
+		t.Errorf("Should be able to toggle to OpenShift schemas, instead %s", schema)
 	}
 }
 
 func TestDetermineSchemaForSchemaLocation(t *testing.T) {
+	OpenShift = false
+	Version = "master"
 	SchemaLocation = "file:///home/me"
-	schema := determineSchema("sample")
-	expectedSchema := "file:///home/me/openshift-json-schema/master/v1.0-standalone/sample.json"
+	schema := determineSchema("sample", "v1")
+	expectedSchema := "file:///home/me/master-standalone/sample-v1.json"
 	if schema != expectedSchema {
 		t.Errorf("Should be able to specify a schema location, expected %s, got %s instead ", expectedSchema, schema)
 	}
