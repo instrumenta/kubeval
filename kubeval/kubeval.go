@@ -106,15 +106,16 @@ func determineSchema(kind string, apiVersion string) string {
 
 	var kindSuffix string
 
-	versionParts := strings.Split(apiVersion, "/")
+	groupParts := strings.Split(apiVersion, "/")
+	versionParts := strings.Split(groupParts[0], ".")
 
 	if OpenShift {
 		kindSuffix = ""
 	} else {
-		if len(versionParts) == 1 {
+		if len(groupParts) == 1 {
 			kindSuffix = "-" + strings.ToLower(versionParts[0])
 		} else {
-			kindSuffix = fmt.Sprintf("-%s-%s", strings.ToLower(versionParts[0]), strings.ToLower(versionParts[1]))
+			kindSuffix = fmt.Sprintf("-%s-%s", strings.ToLower(versionParts[0]), strings.ToLower(groupParts[1]))
 		}
 	}
 

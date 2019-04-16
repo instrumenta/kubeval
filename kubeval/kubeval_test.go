@@ -25,13 +25,14 @@ func TestValidateValidInputs(t *testing.T) {
 		"null_array.yaml",
 		"quantity.yaml",
 		"extra_property.yaml",
+		"full_domain_group.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
 		_, err := Validate(fileContents, test)
 		if err != nil {
-			t.Errorf("Validate should pass when testing valid configuration in" + test)
+			t.Errorf("Validate should pass when testing valid configuration in " + test)
 		}
 	}
 }
