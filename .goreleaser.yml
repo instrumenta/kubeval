@@ -24,3 +24,12 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+brew:
+  github:
+    owner: instrumenta
+    name: homebrew-instrumenta
+  folder: Formula
+  description: "Validate your Kubernetes configurations"
+  homepage: "https://github.com/instrumenta/kubeval"
+  test: |
+    system "#{bin}/kubeval --version"
