@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/garethr/kubeval/kubeval"
-	"github.com/garethr/kubeval/log"
+	"github.com/instrumenta/kubeval/kubeval"
+	"github.com/instrumenta/kubeval/log"
 )
 
 // RootCmd represents the the command to run when kubeval is run

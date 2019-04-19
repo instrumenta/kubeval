@@ -6,10 +6,8 @@ It can also be used as a library in other Go applications.
 [![Build
 Status](https://travis-ci.org/garethr/kubeval.svg)](https://travis-ci.org/garethr/kubeval)
 [![Go Report
-Card](https://goreportcard.com/badge/github.com/garethr/kubeval)](https://goreportcard.com/report/github.com/garethr/kubeval)
-[![GoDoc](https://godoc.org/github.com/garethr/kubeval?status.svg)](https://godoc.org/github.com/garethr/kubeval)
-[![Coverage
-Status](https://coveralls.io/repos/github/garethr/kubeval/badge.svg?branch=master)](https://coveralls.io/github/garethr/kubeval?branch=master)
+Card](https://goreportcard.com/badge/github.com/instrumenta/kubeval)](https://goreportcard.com/report/github.com/instrumenta/kubeval)
+[![GoDoc](https://godoc.org/github.com/instrumenta/kubeval?status.svg)](https://godoc.org/github.com/instrumenta/kubeval)
 
 ```
 $ kubeval my-invalid-rc.yaml
@@ -69,7 +67,7 @@ Kubernetes has strong definitions of what a Deployment, Pod, or
 ReplicationController are. It exposes that information via an OpenAPI
 based description. That description contains JSON Schema information for
 the Kubernetes types. This tool uses those extracted schemas, published
-at [garethr/kubernetes-json-schema](https://github.com/garethr/kubernetes-json-schema) and [garethr/openshift-json-schema](https://github.com/garethr/openshift-json-schema). See
+at [instrumenta/kubernetes-json-schema](https://github.com/instrumenta/kubernetes-json-schema) and [garethr/openshift-json-schema](https://github.com/garethr/openshift-json-schema). See
 those repositories and
 [this blog post](https://www.morethanseven.net/2017/06/26/schemas-for-kubernetes-types/)
 for the details.
@@ -85,7 +83,7 @@ directly or place it on your path.
 
 ```
 PLATFORM=darwin # Other choices: linux, windows
-wget https://github.com/garethr/kubeval/releases/download/0.8.0/kubeval-${PLATFORM}-amd64.tar.gz
+wget https://github.com/instrumenta/kubeval/releases/download/0.8.0/kubeval-${PLATFORM}-amd64.tar.gz
 tar xf kubeval-${PLATFORM}-amd64.tar.gz
 cp kubeval /usr/local/bin
 ```
@@ -175,7 +173,7 @@ After installing with you prefered dependency management tool, import the releva
 
 ```go
 import (
-  "github.com/garethr/kubeval/kubeval"
+  "github.com/instrumenta/kubeval/kubeval"
 )
 ```
 
@@ -235,5 +233,5 @@ fi
 `kubeval` should be useful now but can be obviously improved in a number
 of ways. If you have suggestions for improvements or new features, or
 run into a bug please open issues against the [GitHub
-repository](https://github.com/garethr/kubeval). Pull requests also
+repository](https://github.com/instrumenta/kubeval). Pull requests also
 heartily encouraged.

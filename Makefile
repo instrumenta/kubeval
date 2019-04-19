@@ -1,6 +1,6 @@
 NAME=kubeval
 IMAGE_NAME=garethr/$(NAME)
-PACKAGE_NAME=github.com/garethr/$(NAME)
+PACKAGE_NAME=github.com/instrumenta/$(NAME)
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
 TAG=$(shell git describe --abbrev=0 --tags)
 

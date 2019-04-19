@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/garethr/kubeval/version"
+	"github.com/instrumenta/kubeval/version"
 )
 
 var Version bool
