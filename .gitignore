@@ -3,3 +3,4 @@ bin
 releases
 .bats
 chocolatey/kubeval/kubeval.*.nupkg
+dist
