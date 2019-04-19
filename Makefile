@@ -28,42 +28,17 @@ vendor:
 .bats:
 	git clone --depth 1 https://github.com/sstephenson/bats.git .bats
 
-releases:
-	mkdir -p releases
+bin:
+	mkdir bin
 
-bin/linux/amd64:
-	mkdir -p bin/linux/amd64
+release:
+	goreleaser --rm-dist
 
-bin/windows/amd64:
-	mkdir -p bin/windows/amd64
+snapshot:
+	goreleaser --snapshot --skip-publish --rm-dist
 
-bin/windows/386:
-	mkdir -p bin/windows/386
-
-bin/darwin/amd64:
-	mkdir -p bin/darwin/amd64
-
-build: darwin linux windows
-
-darwin: releases bin/darwin/amd64
-	env CGO_ENABLED=0 GOOS=darwin GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/darwin/amd64/$(NAME)
-	tar -C bin/darwin/amd64 -cvzf releases/$(NAME)-darwin-amd64.tar.gz $(NAME)
-
-linux: releases bin/linux/amd64
-	env CGO_ENABLED=0 GOOS=linux GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/linux/amd64/$(NAME)
-	tar -C bin/linux/amd64 -cvzf releases/$(NAME)-linux-amd64.tar.gz $(NAME)
-
-windows: windows-64 windows-32
-
-windows-64: releases bin/windows/amd64
-	env CGO_ENABLED=0 GOOS=windows GOAARCH=amd64 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/windows/amd64/$(NAME).exe
-	tar -C bin/windows/amd64 -cvzf releases/$(NAME)-windows-amd64.tar.gz $(NAME).exe
-	cd bin/windows/amd64 && zip ../../../releases/$(NAME)-windows-amd64.zip $(NAME).exe
-
-windows-32: releases bin/windows/386
-	env CGO_ENABLED=0 GOOS=windows GOAARCH=386 go build -ldflags '$(LDFLAGS)' -v -o $(CURDIR)/bin/windows/386/$(NAME).exe
-	tar -C bin/windows/386 -cvzf releases/$(NAME)-windows-386.tar.gz $(NAME).exe
-	cd bin/windows/386 && zip ../../../releases/$(NAME)-windows-386.zip $(NAME).exe
+build: bin
+	go build -o bin/$(NAME) .
 
 lint: $(GOPATH)/bin/golint$(suffix)
 	golint
@@ -88,9 +63,6 @@ vet:
 test: vet
 	go test -race -v -cover ./...
 
-coveralls: $(GOPATH)/bin/goveralls$(suffix)
-	goveralls -service=travis-ci
-
 watch:
 	ls */*.go | entr make test
 
@@ -104,24 +76,24 @@ cover:
 	rm coverage.out
 
 clean:
-	rm -fr releases bin
+	rm -fr dist bin
 
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
 checksum-windows-386:
-	cd releases && powershell -Command "(Get-FileHash $(NAME)-windows-386.zip -Algorithm SHA256).Hash.ToLower()"
+	cd dist && sha256sum $(NAME)-windows-386.zip
 
 checksum-windows-amd64:
-	cd releases && powershell -Command "(Get-FileHash $(NAME)-windows-amd64.zip -Algorithm SHA256).Hash.ToLower()"
+	cd dist && sha256sum $(NAME)-windows-amd64.zip
 
 checksum-darwin:
-	cd releases && powershell -Command "(Get-FileHash $(NAME)-darwin-amd64.tar.gz -Algorithm SHA256).Hash.ToLower()"
+	cd dist && sha256sum $(NAME)-darwin-amd64.zip
 
 checksum-linux:
-	cd releases && powershell -Command "(Get-FileHash $(NAME)-linux-amd64.tar.gz -Algorithm SHA256).Hash.ToLower()"
+	cd dist && sha256sum $(NAME)-linux-amd64.zip
 
-checksums: download checksum-darwin checksum-windows-386 checksum-windows-amd64 checksum-linux
+checksums: checksum-darwin checksum-windows-386 checksum-windows-amd64 checksum-linux
 
 chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 	cd chocolatey/$(NAME) && choco pack
@@ -129,10 +101,4 @@ chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 choco:
 	cd chocolatey/$(NAME) && choco push $(NAME).$(TAG).nupkg -s https://chocolatey.org/
 
-download:
-	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iwr -outf releases/$(NAME)-darwin-amd64.tar.gz https://$(PACKAGE_NAME)/releases/download/$(TAG)/$(NAME)-darwin-amd64.tar.gz"
-	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iwr -outf releases/$(NAME)-windows-amd64.zip https://$(PACKAGE_NAME)/releases/download/$(TAG)/$(NAME)-windows-amd64.zip"
-	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iwr -outf releases/$(NAME)-windows-386.zip https://$(PACKAGE_NAME)/releases/download/$(TAG)/$(NAME)-windows-386.zip"
-	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iwr -outf releases/$(NAME)-linux-amd64.tar.gz https://$(PACKAGE_NAME)/releases/download/$(TAG)/$(NAME)-linux-amd64.tar.gz"
-
-.PHONY: fmt clean cover acceptance lint docker test vet watch windows linux darwin build check checksum-windows-386 checksum-windows-amd64 checksum-darwin checksum-linux choco download checksum
+.PHONY: release snapshot fmt clean cover acceptance lint docker test vet watch build check checksum-windows-386 checksum-windows-amd64 checksum-darwin checksum-linux choco checksum
