@@ -3,8 +3,6 @@
 `kubeval` is a tool for validating a Kubernetes YAML or JSON configuration file.
 It can also be used as a library in other Go applications.
 
-[![Build
-Status](https://travis-ci.org/garethr/kubeval.svg)](https://travis-ci.org/garethr/kubeval)
 [![Go Report
 Card](https://goreportcard.com/badge/github.com/instrumenta/kubeval)](https://goreportcard.com/report/github.com/instrumenta/kubeval)
 [![GoDoc](https://godoc.org/github.com/instrumenta/kubeval?status.svg)](https://godoc.org/github.com/instrumenta/kubeval)
