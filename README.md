@@ -83,7 +83,7 @@ directly or place it on your path.
 
 ```
 PLATFORM=darwin # Other choices: linux, windows
-wget https://github.com/instrumenta/kubeval/releases/download/0.8.0/kubeval-${PLATFORM}-amd64.tar.gz
+wget https://github.com/instrumenta/kubeval/releases/download/0.9.0/kubeval-${PLATFORM}-amd64.tar.gz
 tar xf kubeval-${PLATFORM}-amd64.tar.gz
 cp kubeval /usr/local/bin
 ```
