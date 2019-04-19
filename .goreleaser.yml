@@ -33,3 +33,9 @@ brew:
   homepage: "https://github.com/instrumenta/kubeval"
   test: |
     system "#{bin}/kubeval --version"
+scoop:
+  bucket:
+    owner: instrumenta
+    name: scoop-instrumenta
+  description: "Validate your Kubernetes configurations"
+  homepage: "https://github.com/instrumenta/kubeval"
