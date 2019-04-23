@@ -1,0 +1,5 @@
+site_name: Kubeval
+theme:
+  name: "material"
+repo_url: https://github.com/instrumenta/kubeval
+
