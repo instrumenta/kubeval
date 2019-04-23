@@ -9,3 +9,4 @@ nav:
     - "Contrib": "contrib.md"
 markdown_extensions:
     - codehilite
+google_analytics: ["UA-138875752-1", "kubeval.instrumenta.dev"]
