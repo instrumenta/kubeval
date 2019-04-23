@@ -4,15 +4,6 @@ PACKAGE_NAME=github.com/instrumenta/$(NAME)
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
 TAG=$(shell git describe --abbrev=0 --tags)
 
-LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
-LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildVersion=$(shell git describe --abbrev=0 --tags)"
-LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildSHA=$(shell git rev-parse HEAD)"
-# Strip debug information
-LDFLAGS += -s
-
-ifeq ($(OS),Windows_NT)
-	suffix := .exe
-endif
 
 all: build
 
