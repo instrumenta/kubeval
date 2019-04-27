@@ -72,19 +72,10 @@ clean:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-checksum-windows-386:
-	cd dist && sha256sum $(NAME)-windows-386.zip
+dist/$(NAME)-checksum-%:
+	cd dist && sha256sum $@.zip
 
-checksum-windows-amd64:
-	cd dist && sha256sum $(NAME)-windows-amd64.zip
-
-checksum-darwin:
-	cd dist && sha256sum $(NAME)-darwin-amd64.zip
-
-checksum-linux:
-	cd dist && sha256sum $(NAME)-linux-amd64.zip
-
-checksums: checksum-darwin checksum-windows-386 checksum-windows-amd64 checksum-linux
+checksums: dist/$(NAME)-checksum-darwin-amd64 dist/$(NAME)-checksum-windows-386 dist/$(NAME)-checksum-windows-amd64 dist/$(NAME)-checksum-linux-amd64
 
 chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 	cd chocolatey/$(NAME) && choco pack
@@ -92,4 +83,4 @@ chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 choco:
 	cd chocolatey/$(NAME) && choco push $(NAME).$(TAG).nupkg -s https://chocolatey.org/
 
-.PHONY: release snapshot fmt clean cover acceptance lint docker test vet watch build check checksum-windows-386 checksum-windows-amd64 checksum-darwin checksum-linux choco checksum
+.PHONY: release snapshot fmt clean cover acceptance lint docker test vet watch build check choco checksums

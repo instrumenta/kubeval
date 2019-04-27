@@ -12,7 +12,7 @@ For building Kubeval you'll need the following:
 
 For releasing Kubeval you'll also need:
 
-* [Goreleaser](https://opencollective.com)
+* [Goreleaser](https://goreleaser.com/)
 
 The acceptance tests use [Bats](https://github.com/sstephenson/bats) and can be run
 directly or via Docker.
