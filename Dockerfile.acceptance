@@ -2,7 +2,7 @@ FROM golang:1.12-alpine as builder
 RUN apk --no-cache add make git
 WORKDIR /
 COPY . /
-RUN make linux
+RUN make build
 
 FROM bats/bats:v1.1.0
 RUN apk --no-cache add ca-certificates
