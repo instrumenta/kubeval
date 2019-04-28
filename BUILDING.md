@@ -28,6 +28,15 @@ make build
 
 This should create `bin/kubeval`.
 
+### Release Snapshot
+
+To build the release snapshots run:
+
+```
+make snapshot
+```
+
+This creates the directory `dist` with all available release artifacts and the final configuration for `goreleaser`.
 
 ## Testing
 
