@@ -10,7 +10,7 @@ directly or place it on your path.
 ## Linux
 
 ```
-wget https://github.com/instrumenta/kubeval/releases/download/0.9.0/kubeval-linux-amd64.tar.gz
+wget https://github.com/instrumenta/kubeval/releases/download/0.9.2/kubeval-linux-amd64.tar.gz
 tar xf kubeval-linux-amd64.tar.gz
 sudo cp kubeval /usr/local/bin
 ```
@@ -18,7 +18,7 @@ sudo cp kubeval /usr/local/bin
 ## macOS
 
 ```
-wget https://github.com/instrumenta/kubeval/releases/download/0.9.0/kubeval-dawwin-amd64.tar.gz
+wget https://github.com/instrumenta/kubeval/releases/download/0.9.2/kubeval-darwin-amd64.tar.gz
 tar xf kubeval-darwin-amd64.tar.gz
 sudo cp kubeval /usr/local/bin
 ```
