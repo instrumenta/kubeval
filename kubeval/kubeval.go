@@ -36,6 +36,10 @@ var OpenShift bool
 // the schema. The API allows them, but kubectl does not
 var Strict bool
 
+// SkipCrdSchemaMiss tells kubeval whether skip validation
+// step of CustomResourceDefinitions
+var SkipCrdSchemaMiss bool
+
 // ValidFormat is a type for quickly forcing
 // new formats on the gojsonschema loader
 type ValidFormat struct{}
@@ -199,7 +203,11 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
 	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
 
+	if SkipCrdSchemaMiss {
+		return result, nil
+	}
 	results, err := schema.Validate(documentLoader)
+
 	if err != nil {
 		return result, fmt.Errorf("Problem loading schema from the network at %s: %s", schemaRef, err)
 	}

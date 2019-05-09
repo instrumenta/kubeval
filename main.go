@@ -119,6 +119,8 @@ func init() {
 	RootCmd.Flags().BoolVarP(&kubeval.OpenShift, "openshift", "", false, "Use OpenShift schemas instead of upstream Kubernetes")
 	RootCmd.Flags().BoolVarP(&kubeval.Strict, "strict", "", false, "Disallow additional properties not in schema")
 	RootCmd.SetVersionTemplate(`{{.Version}}`)
+	RootCmd.Flags().BoolVarP(&kubeval.SkipCrdSchemaMiss, "skip-crd-schema-miss", "", false, "Skip validation for CRD's without schema")
+	RootCmd.Flags().BoolVarP(&Version, "version", "", false, "Display the kubeval version information and exit")
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
 	RootCmd.PersistentFlags().StringP("filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")
 	viper.BindPFlag("filename", RootCmd.PersistentFlags().Lookup("filename"))
