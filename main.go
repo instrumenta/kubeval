@@ -51,7 +51,8 @@ var RootCmd = &cobra.Command{
 			for scanner.Scan() {
 				buffer.WriteString(scanner.Text() + "\n")
 			}
-			results, err := kubeval.Validate(buffer.Bytes(), viper.GetString("filename"))
+			schemaCache := kubeval.NewSchemaCache()
+			results, err := kubeval.ValidateWithCache(buffer.Bytes(), viper.GetString("filename"), schemaCache)
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
@@ -62,6 +63,7 @@ var RootCmd = &cobra.Command{
 				log.Error("You must pass at least one file as an argument")
 				os.Exit(1)
 			}
+			schemaCache := kubeval.NewSchemaCache()
 			for _, fileName := range args {
 				filePath, _ := filepath.Abs(fileName)
 				fileContents, err := ioutil.ReadFile(filePath)
@@ -69,7 +71,7 @@ var RootCmd = &cobra.Command{
 					log.Error("Could not open file", fileName)
 					os.Exit(1)
 				}
-				results, err := kubeval.Validate(fileContents, fileName)
+				results, err := kubeval.ValidateWithCache(fileContents, fileName, schemaCache)
 				if err != nil {
 					log.Error(err)
 					os.Exit(1)
