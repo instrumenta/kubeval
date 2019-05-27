@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
 	"gopkg.in/yaml.v2"
+
+	"github.com/instrumenta/kubeval/log"
 )
 
 // Version represents the version of Kubernetes
@@ -36,9 +38,9 @@ var OpenShift bool
 // the schema. The API allows them, but kubectl does not
 var Strict bool
 
-// SkipCrdSchemaMiss tells kubeval whether skip validation
-// step of CustomResourceDefinitions
-var SkipCrdSchemaMiss bool
+// IgnoreMissingSchemas tells kubeval whether to skip validation
+// for resource definitions without an available schema
+var IgnoreMissingSchemas bool
 
 // ValidFormat is a type for quickly forcing
 // new formats on the gojsonschema loader
@@ -153,6 +155,9 @@ func determineAPIVersion(body interface{}) (string, error) {
 func validateResource(data []byte, fileName string, schemaCache map[string]*gojsonschema.Schema) (ValidationResult, error) {
 	var spec interface{}
 	result := ValidationResult{}
+	if IgnoreMissingSchemas {
+		log.Warn("Skipping missing schema validation!")
+	}
 	result.FileName = fileName
 	err := yaml.Unmarshal(data, &spec)
 	if err != nil {
@@ -203,7 +208,7 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
 	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
 
-	if SkipCrdSchemaMiss {
+	if IgnoreMissingSchemas {
 		return result, nil
 	}
 

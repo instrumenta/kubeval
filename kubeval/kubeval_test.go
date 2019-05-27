@@ -90,7 +90,7 @@ func TestStrictCatchesAdditionalErrors(t *testing.T) {
 }
 
 func TestSkipCrdSchemaMiss(t *testing.T) {
-	SkipCrdSchemaMiss = true
+	IgnoreMissingSchemas = true
 	filePath, _ := filepath.Abs("../fixtures/test_crd.yaml")
 	fileContents, _ := ioutil.ReadFile(filePath)
 	results, _ := Validate(fileContents, "test_crd.yaml")
