@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+
+	"github.com/xeipuuv/gojsonschema"
 )
 
 func TestValidateBlankInput(t *testing.T) {
@@ -31,6 +33,31 @@ func TestValidateValidInputs(t *testing.T) {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
 		_, err := Validate(fileContents, test)
+		if err != nil {
+			t.Errorf("Validate should pass when testing valid configuration in " + test)
+		}
+	}
+}
+
+func TestValidateValidInputsWithCache(t *testing.T) {
+	var tests = []string{
+		"blank.yaml",
+		"comment.yaml",
+		"valid.yaml",
+		"valid.json",
+		"multi_valid.yaml",
+		"int_or_string.yaml",
+		"null_array.yaml",
+		"quantity.yaml",
+		"extra_property.yaml",
+		"full_domain_group.yaml",
+	}
+	schemaCache := make(map[string]*gojsonschema.Schema, 0)
+
+	for _, test := range tests {
+		filePath, _ := filepath.Abs("../fixtures/" + test)
+		fileContents, _ := ioutil.ReadFile(filePath)
+		_, err := ValidateWithCache(fileContents, test, schemaCache)
 		if err != nil {
 			t.Errorf("Validate should pass when testing valid configuration in " + test)
 		}

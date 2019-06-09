@@ -146,7 +146,7 @@ func determineAPIVersion(body interface{}) (string, error) {
 
 // validateResource validates a single Kubernetes resource against
 // the relevant schema, detecting the type of resource automatically
-func validateResource(data []byte, fileName string) (ValidationResult, error) {
+func validateResource(data []byte, fileName string, schemaCache map[string]*gojsonschema.Schema) (ValidationResult, error) {
 	var spec interface{}
 	result := ValidationResult{}
 	result.FileName = fileName
@@ -180,9 +180,17 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 	}
 	result.APIVersion = apiVersion
 
-	schema := determineSchema(kind, apiVersion)
+	schemaRef := determineSchema(kind, apiVersion)
 
-	schemaLoader := gojsonschema.NewReferenceLoader(schema)
+	schema, ok := schemaCache[schemaRef]
+	if !ok {
+		schemaLoader := gojsonschema.NewReferenceLoader(schemaRef)
+		schema, err = gojsonschema.NewSchema(schemaLoader)
+		if err != nil {
+			return result, fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err)
+		}
+		schemaCache[schemaRef] = schema
+	}
 
 	// Without forcing these types the schema fails to load
 	// Need to Work out proper handling for these types
@@ -191,9 +199,9 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
 	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
 
-	results, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	results, err := schema.Validate(documentLoader)
 	if err != nil {
-		return result, fmt.Errorf("Problem loading schema from the network at %s: %s", schema, err)
+		return result, fmt.Errorf("Problem loading schema from the network at %s: %s", schemaRef, err)
 	}
 
 	if results.Valid() {
@@ -204,10 +212,25 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 	return result, nil
 }
 
+// NewSchemaCache returns a new schema cache to be used with
+// ValidateWithCache
+func NewSchemaCache() map[string]*gojsonschema.Schema {
+	return make(map[string]*gojsonschema.Schema, 0)
+}
+
 // Validate a Kubernetes YAML file, parsing out individual resources
 // and validating them all according to the  relevant schemas
 // TODO This function requires a judicious amount of refactoring.
 func Validate(config []byte, fileName string) ([]ValidationResult, error) {
+	schemaCache := NewSchemaCache()
+	return ValidateWithCache(config, fileName, schemaCache)
+}
+
+// ValidateWithCache validates a Kubernetes YAML file, parsing out individual resources
+// and validating them all according to the relevant schemas
+// Allows passing a kubeval.NewSchemaCache() to cache schemas in-memory
+// between validations
+func ValidateWithCache(config []byte, fileName string, schemaCache map[string]*gojsonschema.Schema) ([]ValidationResult, error) {
 	results := make([]ValidationResult, 0)
 
 	if len(config) == 0 {
@@ -222,7 +245,7 @@ func Validate(config []byte, fileName string) ([]ValidationResult, error) {
 	var errors *multierror.Error
 	for _, element := range bits {
 		if len(element) > 0 {
-			result, err := validateResource(element, fileName)
+			result, err := validateResource(element, fileName, schemaCache)
 			results = append(results, result)
 			if err != nil {
 				errors = multierror.Append(errors, err)
