@@ -79,6 +79,30 @@ func TestValidateInvalidInputs(t *testing.T) {
 	}
 }
 
+func TestValidateSourceExtraction(t *testing.T) {
+	expectedFileNames := []string{
+		"chart/templates/primary.yaml",   // first from primary template
+		"chart/templates/primary.yaml",   // second resource from primary template
+		"chart/templates/secondary.yaml", // first resource from secondary template
+		"chart/templates/secondary.yaml", // second resource from secondary template
+		"chart/templates/frontend.yaml",  // first resource from frontend template
+		"chart/templates/frontend.yaml",  // second resource from frontend template
+		"chart/templates/frontend.yaml",  // empty resource no comment
+		"chart/templates/frontend.yaml",  // empty resource with comment
+	}
+	filePath, _ := filepath.Abs("../fixtures/multi_valid_source.yaml")
+	fileContents, _ := ioutil.ReadFile(filePath)
+	results, err := Validate(fileContents, "multi_valid_source.yaml")
+	if err != nil {
+		t.Fatalf("Unexpected error while validating source: %v", err)
+	}
+	for i, r := range results {
+		if r.FileName != expectedFileNames[i] {
+			t.Errorf("%v: expected filename [%v], got [%v]", i, expectedFileNames[i], r.FileName)
+		}
+	}
+}
+
 func TestStrictCatchesAdditionalErrors(t *testing.T) {
 	Strict = true
 	filePath, _ := filepath.Abs("../fixtures/extra_property.yaml")
