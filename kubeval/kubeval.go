@@ -193,6 +193,9 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 
 	schema, ok := schemaCache[schemaRef]
 	if !ok {
+		if IgnoreMissingSchemas {
+			return result, nil
+		}
 		schemaLoader := gojsonschema.NewReferenceLoader(schemaRef)
 		schema, err = gojsonschema.NewSchema(schemaLoader)
 		if err != nil {
@@ -207,10 +210,6 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	gojsonschema.FormatCheckers.Add("byte", ValidFormat{})
 	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
 	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
-
-	if IgnoreMissingSchemas {
-		return result, nil
-	}
 
 	results, err := schema.Validate(documentLoader)
 	if err != nil {
