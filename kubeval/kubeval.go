@@ -156,7 +156,7 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	var spec interface{}
 	result := ValidationResult{}
 	if IgnoreMissingSchemas {
-		log.Warn("Warning: Set to ignore missing schemas!")
+		log.Warn("Warning: Set to ignore missing schemas")
 	}
 	result.FileName = fileName
 	err := yaml.Unmarshal(data, &spec)

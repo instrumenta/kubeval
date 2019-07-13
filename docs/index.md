@@ -61,6 +61,19 @@ $ echo $?
 ```
 
 
+## CRDs
+
+Currently kubeval relies on schemas generated from the Kubernetes API. This means it's not
+possible to validate resources using CRDs. Currently you need to pass a flag to ignore
+missing schemas, though this may change in a future major version.
+
+```
+$ kubeval --ignore-missing-schemas fixtures/test_crd.yaml
+Warning: Set to ignore missing schemas
+The document fixtures/test_crd.yaml contains a valid SealedSecret
+```
+
+
 ## Full usage instructions
 
 ```
@@ -73,6 +86,7 @@ Usage:
 Flags:
   -f, --filename string             filename to be displayed when testing manifests read from stdin (default "stdin")
   -h, --help                        help for kubeval
+      --ignore-missing-schemas      Skip validation for resource definitions without a schema
   -v, --kubernetes-version string   Version of Kubernetes to validate against (default "master")
       --openshift                   Use OpenShift schemas instead of upstream Kubernetes
       --schema-location string      Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION (default "https://raw.githubusercontent.com/garethr")

@@ -105,3 +105,13 @@
   run kubeval fixtures/extra_property.yaml
   [ "$status" -eq 0 ]
 }
+
+@test "Fail when parsing a config with CRD" {
+  run kubeval fixtures/test_crd.yaml
+  [ "$status" -eq 1 ]
+}
+
+@test "Pass when parsing a config with CRD and ignoring missing schemas" {
+  run kubeval --ignore-missing-schemas fixtures/test_crd.yaml
+  [ "$status" -eq 0 ]
+}

@@ -89,15 +89,6 @@ func TestStrictCatchesAdditionalErrors(t *testing.T) {
 	}
 }
 
-func TestSkipCrdSchemaMiss(t *testing.T) {
-	IgnoreMissingSchemas = true
-	filePath, _ := filepath.Abs("../fixtures/test_crd.yaml")
-	fileContents, _ := ioutil.ReadFile(filePath)
-	results, _ := Validate(fileContents, "test_crd.yaml")
-	if len(results[0].Errors) != 0 {
-		t.Errorf("For custom CRD's with schema missing we should skip with SkipCrdSchemaMiss flag")
-	}
-}
 
 func TestValidateMultipleVersions(t *testing.T) {
 	Strict = true
@@ -170,3 +161,14 @@ func TestDetermineKind(t *testing.T) {
 		t.Errorf("Shouldn't be able to find a kind when passed a blank string")
 	}
 }
+
+func TestSkipCrdSchemaMiss(t *testing.T) {
+	IgnoreMissingSchemas = true
+	filePath, _ := filepath.Abs("../fixtures/test_crd.yaml")
+	fileContents, _ := ioutil.ReadFile(filePath)
+	results, _ := Validate(fileContents, "test_crd.yaml")
+	if len(results[0].Errors) != 0 {
+		t.Errorf("For custom CRD's with schema missing we should skip with SkipCrdSchemaMiss flag")
+	}
+}
+
