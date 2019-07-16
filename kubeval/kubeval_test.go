@@ -28,6 +28,7 @@ func TestValidateValidInputs(t *testing.T) {
 		"quantity.yaml",
 		"extra_property.yaml",
 		"full_domain_group.yaml",
+		"unconventional_keys.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
@@ -51,6 +52,7 @@ func TestValidateValidInputsWithCache(t *testing.T) {
 		"quantity.yaml",
 		"extra_property.yaml",
 		"full_domain_group.yaml",
+		"unconventional_keys.yaml",
 	}
 	schemaCache := make(map[string]*gojsonschema.Schema, 0)
 
@@ -88,7 +90,6 @@ func TestStrictCatchesAdditionalErrors(t *testing.T) {
 		t.Errorf("Validate should not pass when testing for additional properties not in schema")
 	}
 }
-
 
 func TestValidateMultipleVersions(t *testing.T) {
 	Strict = true
@@ -171,4 +172,3 @@ func TestSkipCrdSchemaMiss(t *testing.T) {
 		t.Errorf("For custom CRD's with schema missing we should skip with SkipCrdSchemaMiss flag")
 	}
 }
-
