@@ -42,6 +42,10 @@ var Strict bool
 // for resource definitions without an available schema
 var IgnoreMissingSchemas bool
 
+// ExitOnError tells kubeval whether to halt processing upon the
+// first error encountered or to continue, aggregating all errors
+var ExitOnError bool
+
 // ValidFormat is a type for quickly forcing
 // new formats on the gojsonschema loader
 type ValidFormat struct{}
@@ -258,10 +262,13 @@ func ValidateWithCache(config []byte, fileName string, schemaCache map[string]*g
 	for _, element := range bits {
 		if len(element) > 0 {
 			result, err := validateResource(element, fileName, schemaCache)
-			results = append(results, result)
 			if err != nil {
 				errors = multierror.Append(errors, err)
+				if ExitOnError {
+					return results, errors
+				}
 			}
+			results = append(results, result)
 		} else {
 			result := ValidationResult{}
 			result.FileName = fileName
