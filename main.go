@@ -95,6 +95,8 @@ func logResults(results []kubeval.ValidationResult, success bool) bool {
 			}
 		} else if result.Kind == "" {
 			log.Success("The document", result.FileName, "is empty")
+		} else if !result.ValidatedAgainstSchema {
+			log.Warn("The document", result.FileName, "containing a", result.Kind, "was not validated against a schema")
 		} else {
 			log.Success("The document", result.FileName, "contains a valid", result.Kind)
 		}

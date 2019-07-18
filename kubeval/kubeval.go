@@ -55,10 +55,11 @@ func (f ValidFormat) IsFormat(input interface{}) bool {
 // ValidationResult contains the details from
 // validating a given Kubernetes resource
 type ValidationResult struct {
-	FileName   string
-	Kind       string
-	APIVersion string
-	Errors     []gojsonschema.ResultError
+	FileName               string
+	Kind                   string
+	APIVersion             string
+	ValidatedAgainstSchema bool
+	Errors                 []gojsonschema.ResultError
 }
 
 // detectLineBreak returns the relevant platform specific line ending
@@ -155,9 +156,6 @@ func determineAPIVersion(body interface{}) (string, error) {
 func validateResource(data []byte, fileName string, schemaCache map[string]*gojsonschema.Schema) (ValidationResult, error) {
 	var spec interface{}
 	result := ValidationResult{}
-	if IgnoreMissingSchemas {
-		log.Warn("Warning: Set to ignore missing schemas")
-	}
 	result.FileName = fileName
 	err := yaml.Unmarshal(data, &spec)
 	if err != nil {
@@ -175,8 +173,6 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 		return result, nil
 	}
 
-	documentLoader := gojsonschema.NewGoLoader(body)
-
 	kind, err := determineKind(body)
 	if err != nil {
 		return result, err
@@ -189,17 +185,29 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	}
 	result.APIVersion = apiVersion
 
-	schemaRef := determineSchema(kind, apiVersion)
+	schemaErrors, err := validateAgainstSchema(body, &result, schemaCache)
+	if err != nil {
+		return result, err
+	}
+	result.Errors = schemaErrors
+	return result, nil
+}
 
+func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema) ([]gojsonschema.ResultError, error) {
+	if IgnoreMissingSchemas {
+		log.Warn("Warning: Set to ignore missing schemas")
+	}
+	schemaRef := determineSchema(resource.Kind, resource.APIVersion)
 	schema, ok := schemaCache[schemaRef]
 	if !ok {
-		if IgnoreMissingSchemas {
-			return result, nil
-		}
 		schemaLoader := gojsonschema.NewReferenceLoader(schemaRef)
+		var err error
 		schema, err = gojsonschema.NewSchema(schemaLoader)
 		if err != nil {
-			return result, fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err)
+			if IgnoreMissingSchemas {
+				return []gojsonschema.ResultError{}, nil
+			}
+			return []gojsonschema.ResultError{}, fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err)
 		}
 		schemaCache[schemaRef] = schema
 	}
@@ -211,17 +219,16 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
 	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
 
+	documentLoader := gojsonschema.NewGoLoader(body)
 	results, err := schema.Validate(documentLoader)
 	if err != nil {
-		return result, fmt.Errorf("Problem loading schema from the network at %s: %s", schemaRef, err)
+		return []gojsonschema.ResultError{}, fmt.Errorf("Problem loading schema from the network at %s: %s", schemaRef, err)
 	}
-
-	if results.Valid() {
-		return result, nil
+	resource.ValidatedAgainstSchema = true
+	if !results.Valid() {
+		return results.Errors(), nil
 	}
-
-	result.Errors = results.Errors()
-	return result, nil
+	return []gojsonschema.ResultError{}, nil
 }
 
 // NewSchemaCache returns a new schema cache to be used with

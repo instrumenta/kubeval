@@ -163,12 +163,17 @@ func TestDetermineKind(t *testing.T) {
 }
 
 func TestSkipCrdSchemaMiss(t *testing.T) {
-	IgnoreMissingSchemas = true
 	filePath, _ := filepath.Abs("../fixtures/test_crd.yaml")
 	fileContents, _ := ioutil.ReadFile(filePath)
+	_, err := Validate(fileContents, "test_crd.yaml")
+	if err == nil {
+		t.Errorf("For custom CRD's with schema missing we should error without IgnoreMissingSchemas flag")
+	}
+
+	IgnoreMissingSchemas = true
 	results, _ := Validate(fileContents, "test_crd.yaml")
 	if len(results[0].Errors) != 0 {
-		t.Errorf("For custom CRD's with schema missing we should skip with SkipCrdSchemaMiss flag")
+		t.Errorf("For custom CRD's with schema missing we should skip with IgnoreMissingSchemas flag")
 	}
 }
 
