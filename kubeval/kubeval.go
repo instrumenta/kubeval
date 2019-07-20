@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -284,10 +285,22 @@ func ValidateWithCache(config []byte, fileName string, schemaCache map[string]*g
 
 	bits := bytes.Split(config, []byte(detectLineBreak(config)+"---"+detectLineBreak(config)))
 
+	// special case regexp for helm
+	helmSourcePattern := regexp.MustCompile(`^(?:---` + detectLineBreak(config) + `)?# Source: (.*)`)
+
 	var errors *multierror.Error
+
+	// Start with the filename we were provided; if we detect a new filename
+	// we'll use that until we find a new one.
+	detectedFileName := fileName
+
 	for _, element := range bits {
 		if len(element) > 0 {
-			result, err := validateResource(element, fileName, schemaCache)
+			if found := helmSourcePattern.FindStringSubmatch(string(element)); found != nil {
+				detectedFileName = found[1]
+			}
+
+			result, err := validateResource(element, detectedFileName, schemaCache)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 				if ExitOnError {
@@ -297,7 +310,7 @@ func ValidateWithCache(config []byte, fileName string, schemaCache map[string]*g
 			results = append(results, result)
 		} else {
 			result := ValidationResult{}
-			result.FileName = fileName
+			result.FileName = detectedFileName
 			results = append(results, result)
 		}
 	}
