@@ -103,6 +103,8 @@ func logResults(results []kubeval.ValidationResult, success bool) bool {
 			}
 		} else if result.Kind == "" {
 			log.Success("The file", result.FileName, "contains an empty YAML document")
+		} else if !result.ValidatedAgainstSchema {
+			log.Warn("The file", result.FileName, "containing a", result.Kind, "was not validated against a schema")
 		} else {
 			log.Success("The file", result.FileName, "contains a valid", result.Kind)
 		}
