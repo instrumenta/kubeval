@@ -1,0 +1,65 @@
+version: 2.1
+orbs:
+  snyk: garethr/snyk@0.3.0
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.12-node
+
+    steps: 
+      - checkout 
+      - restore_cache:
+          keys:
+            - go-mod-{{ checksum "go.sum" }}
+      - run: make test
+      - run:
+          name: Build binary
+          command: make build
+      - save_cache:
+          key: go-mod-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run:
+          name: Install Bats
+          command: | 
+            cd /tmp
+            curl -L https://github.com/sstephenson/bats/archive/v0.4.0.tar.gz | tar -xz
+            sudo ./bats-0.4.0/install.sh /usr/local
+      - snyk/install_snyk
+      - run:
+          name: Run acceptance tests
+          command: |
+            sudo npm install tap-xunit -g
+            mkdir -p ~/reports
+            bats acceptance.bats --tap | tap-xunit > ~/reports/kubeval.xml
+      - snyk/check_code_with_snyk:
+          args: --file=go.mod
+      - store_test_results:
+          path: ~/reports
+      - store_artifacts:
+          path: ~/reports
+  image:
+    docker:
+      - image: circleci/buildpack-deps:stretch 
+
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+          version: 18.09.3
+      - snyk/install_snyk
+      - run:
+          name: Build image
+          command: docker build --progress plain -t garethr/kubeval .
+          environment:
+            DOCKER_BUILDKIT: 1
+      - snyk/check_docker_with_snyk:
+          image: garethr/kubeval
+          project: docker.io/garethr/kubeval
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+      - image
