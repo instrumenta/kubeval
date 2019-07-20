@@ -4,6 +4,7 @@
 It does so using schemas generated from the Kubernetes OpenAPI specification, and
 therefore can validate schemas for multiple versions of Kubernetes.
 
+[![CircleCI](https://circleci.com/gh/instrumenta/kubeval.svg?style=svg)](https://circleci.com/gh/instrumenta/kubeval)
 [![Go Report
 Card](https://goreportcard.com/badge/github.com/instrumenta/kubeval)](https://goreportcard.com/report/github.com/instrumenta/kubeval)
 [![GoDoc](https://godoc.org/github.com/instrumenta/kubeval?status.svg)](https://godoc.org/github.com/instrumenta/kubeval)
