@@ -8,7 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -17,9 +19,10 @@ import (
 )
 
 var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	version     = "dev"
+	commit      = "none"
+	date        = "unknown"
+	directories = []string{}
 )
 
 // RootCmd represents the the command to run when kubeval is run
@@ -59,12 +62,17 @@ var RootCmd = &cobra.Command{
 			}
 			success = logResults(results, success)
 		} else {
-			if len(args) < 1 {
-				log.Error("You must pass at least one file as an argument")
+			if len(args) < 1 && len(directories) < 1 {
+				log.Error("You must pass at least one file as an argument, or at least one directory to the directories flag")
 				os.Exit(1)
 			}
 			schemaCache := kubeval.NewSchemaCache()
-			for _, fileName := range args {
+			files, err := aggregateFiles(args)
+			if err != nil {
+				log.Error(err.Error())
+				success = false
+			}
+			for _, fileName := range files {
 				filePath, _ := filepath.Abs(fileName)
 				fileContents, err := ioutil.ReadFile(filePath)
 				if err != nil {
@@ -102,6 +110,29 @@ func logResults(results []kubeval.ValidationResult, success bool) bool {
 	return success
 }
 
+func aggregateFiles(args []string) ([]string, error) {
+	files := make([]string, len(args))
+	copy(files, args)
+
+	var allErrors *multierror.Error
+	for _, directory := range directories {
+		err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
+				files = append(files, path)
+			}
+			return nil
+		})
+		if err != nil {
+			allErrors = multierror.Append(allErrors, err)
+		}
+	}
+
+	return files, allErrors.ErrorOrNil()
+}
+
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -119,6 +150,7 @@ func init() {
 	RootCmd.Flags().BoolVarP(&kubeval.OpenShift, "openshift", "", false, "Use OpenShift schemas instead of upstream Kubernetes")
 	RootCmd.Flags().BoolVarP(&kubeval.Strict, "strict", "", false, "Disallow additional properties not in schema")
 	RootCmd.Flags().BoolVarP(&kubeval.IgnoreMissingSchemas, "ignore-missing-schemas", "", false, "Skip validation for resource definitions without a schema")
+	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
 	RootCmd.SetVersionTemplate(`{{.Version}}`)
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
 	RootCmd.PersistentFlags().StringP("filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")
