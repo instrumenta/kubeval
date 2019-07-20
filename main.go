@@ -174,6 +174,7 @@ func init() {
 	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
 	RootCmd.Flags().BoolVarP(&kubeval.ExitOnError, "exit-on-error", "", false, "Immediately stop execution when the first error is encountered")
 	RootCmd.Flags().BoolVarP(&forceColor, "force-color", "", false, "Force colored output even if stdout is not a TTY")
+	RootCmd.Flags().StringSliceVar(&kubeval.KindsToSkip, "skip-kinds", []string{}, "Comma-separated list of case-sensitive kinds to skip when validating against schemas")
 	RootCmd.SetVersionTemplate(`{{.Version}}`)
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
 	RootCmd.PersistentFlags().StringP("filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")

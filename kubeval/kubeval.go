@@ -46,6 +46,20 @@ var IgnoreMissingSchemas bool
 // first error encountered or to continue, aggregating all errors
 var ExitOnError bool
 
+// KindsToSkip is a list of kubernetes resources types with which to skip
+// schema validation
+var KindsToSkip []string
+
+// in is a method which tests whether the `key` is in the set
+func in(set []string, key string) bool {
+	for _, k := range set {
+		if k == key {
+			return true
+		}
+	}
+	return false
+}
+
 // ValidFormat is a type for quickly forcing
 // new formats on the gojsonschema loader
 type ValidFormat struct{}
@@ -189,6 +203,10 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	}
 	result.APIVersion = apiVersion
 
+	if in(KindsToSkip, kind) {
+		return result, nil
+	}
+
 	schemaErrors, err := validateAgainstSchema(body, &result, schemaCache)
 	if err != nil {
 		return result, err
@@ -196,6 +214,7 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	result.Errors = schemaErrors
 	return result, nil
 }
+
 
 func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema) ([]gojsonschema.ResultError, error) {
 	if IgnoreMissingSchemas {

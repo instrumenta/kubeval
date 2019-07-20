@@ -207,4 +207,11 @@ func TestSkipCrdSchemaMiss(t *testing.T) {
 	if len(results[0].Errors) != 0 {
 		t.Errorf("For custom CRD's with schema missing we should skip with IgnoreMissingSchemas flag")
 	}
+
+	IgnoreMissingSchemas = false
+	KindsToSkip = []string{"SealedSecret"}
+	results, _ = Validate(fileContents, "test_crd.yaml")
+	if len(results[0].Errors) != 0 {
+		t.Errorf("We should skip resources listed in KindsToSkip")
+	}
 }
