@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -24,6 +25,10 @@ var (
 	date        = "unknown"
 	directories = []string{}
 )
+
+// forceColor tells kubeval to use colored output even if
+// stdout is not a TTY
+var forceColor bool
 
 // RootCmd represents the the command to run when kubeval is run
 var RootCmd = &cobra.Command{
@@ -45,6 +50,10 @@ var RootCmd = &cobra.Command{
 			} else {
 				windowsStdinIssue = true
 			}
+		}
+		// Assert that colors will definitely be used if requested
+		if forceColor {
+			color.NoColor = false
 		}
 		// We detect whether we have anything on stdin to process if we have no arguments
 		// or if the argument is a -
@@ -164,6 +173,7 @@ func init() {
 	RootCmd.Flags().BoolVarP(&kubeval.IgnoreMissingSchemas, "ignore-missing-schemas", "", false, "Skip validation for resource definitions without a schema")
 	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
 	RootCmd.Flags().BoolVarP(&kubeval.ExitOnError, "exit-on-error", "", false, "Immediately stop execution when the first error is encountered")
+	RootCmd.Flags().BoolVarP(&forceColor, "force-color", "", false, "Force colored output even if stdout is not a TTY")
 	RootCmd.SetVersionTemplate(`{{.Version}}`)
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
 	RootCmd.PersistentFlags().StringP("filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")
