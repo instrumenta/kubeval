@@ -89,14 +89,14 @@ func logResults(results []kubeval.ValidationResult, success bool) bool {
 	for _, result := range results {
 		if len(result.Errors) > 0 {
 			success = false
-			log.Warn("The document", result.FileName, "contains an invalid", result.Kind)
+			log.Warn("The file", result.FileName, "contains an invalid", result.Kind)
 			for _, desc := range result.Errors {
 				log.Info("--->", desc)
 			}
 		} else if result.Kind == "" {
-			log.Success("The document", result.FileName, "is empty")
+			log.Success("The file", result.FileName, "contains an empty YAML document")
 		} else {
-			log.Success("The document", result.FileName, "contains a valid", result.Kind)
+			log.Success("The file", result.FileName, "contains a valid", result.Kind)
 		}
 	}
 	return success
