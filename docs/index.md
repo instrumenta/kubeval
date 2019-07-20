@@ -73,6 +73,33 @@ Warning: Set to ignore missing schemas
 The document fixtures/test_crd.yaml contains a valid SealedSecret
 ```
 
+If you would prefer to be more explicit about which custom resources to skip you can instead
+provide a list of resources to skip like so.
+
+```
+$ kubeval --skip-kinds SealedSecret fixtures/test_crd.yam
+The file fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
+```
+
+
+## Helm
+
+Helm chart configurations generally have a reference to the source template in a comment
+like so:
+
+```
+# Source: chart/templates/frontend.yam
+```
+
+When kubeval detects these comments it will report the relevant chart template files in
+the output.
+
+```
+$ kubeval fixtures/multi_valid_source.yaml
+The file chart/templates/primary.yaml contains a valid Service
+The file chart/templates/primary.yaml contains a valid ReplicationControlle
+```
+
 
 ## Full usage instructions
 
@@ -84,14 +111,18 @@ Usage:
   kubeval <file> [file...] [flags]
 
 Flags:
+  -d, --directories strings         A comma-separated list of directories to recursively search for YAML documents
+      --exit-on-error               Immediately stop execution when the first error is encountered
   -f, --filename string             filename to be displayed when testing manifests read from stdin (default "stdin")
+      --force-color                 Force colored output even if stdout is not a TTY
   -h, --help                        help for kubeval
       --ignore-missing-schemas      Skip validation for resource definitions without a schema
   -v, --kubernetes-version string   Version of Kubernetes to validate against (default "master")
       --openshift                   Use OpenShift schemas instead of upstream Kubernetes
-      --schema-location string      Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION (default "https://raw.githubusercontent.com/garethr")
+      --schema-location string      Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION (default "https://kubernetesjsonschema.dev")
+      --skip-kinds strings          Comma-separated list of case-sensitive kinds to skip when validating against schemas
       --strict                      Disallow additional properties not in schema
-      --version                     Display the kubeval version information and exit
+      --version                     version for kubeval
 ```
 
 The command has three important features:
