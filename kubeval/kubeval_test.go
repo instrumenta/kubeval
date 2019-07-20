@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -115,6 +116,36 @@ func TestValidateInputsWithErrors(t *testing.T) {
 		results, _ := Validate(fileContents, test)
 		if len(results[0].Errors) == 0 {
 			t.Errorf("Validate should not pass when testing invalid configuration in " + test)
+		}
+	}
+}
+
+func TestValidateMultipleResourcesWithErrors(t *testing.T) {
+	var tests = []string{
+		"multi_invalid_resources.yaml",
+	}
+	for _, test := range tests {
+		filePath, _ := filepath.Abs("../fixtures/" + test)
+		fileContents, _ := ioutil.ReadFile(filePath)
+		ExitOnError = true
+		_, err := Validate(fileContents, test)
+		if err == nil {
+			t.Errorf("Validate should not pass when testing invalid configuration in " + test)
+		} else if merr, ok := err.(*multierror.Error); ok {
+			if len(merr.Errors) != 1 {
+				t.Errorf("Validate should encounter exactly 1 error when testing invalid configuration in " + test + " with ExitOnError=true")
+			}
+		}
+		ExitOnError = false
+		_, err = Validate(fileContents, test)
+		if err == nil {
+			t.Errorf("Validate should not pass when testing invalid configuration in " + test)
+		} else if merr, ok := err.(*multierror.Error); ok {
+			if len(merr.Errors) != 5 {
+				t.Errorf("Validate should encounter exactly 5 errors when testing invalid configuration in " + test)
+			}
+		} else if !ok {
+			t.Errorf("Validate should encounter exactly 5 errors when testing invalid configuration in " + test)
 		}
 	}
 }
