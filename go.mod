@@ -28,5 +28,6 @@ require (
 	github.com/xeipuuv/gojsonschema v0.0.0-20180816142147-da425ebb7609
 	golang.org/x/sys v0.0.0-20180821044426-4ea2f632f6e9 // indirect
 	golang.org/x/text v0.0.0-20180810153555-6e3c4e7365dd // indirect
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v2 v2.2.1 // indirect
+	sigs.k8s.io/yaml v1.1.0
 )
