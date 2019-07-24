@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/fatih/color"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -24,11 +24,13 @@ var (
 	commit      = "none"
 	date        = "unknown"
 	directories = []string{}
-)
 
-// forceColor tells kubeval to use colored output even if
-// stdout is not a TTY
-var forceColor bool
+	// forceColor tells kubeval to use colored output even if
+	// stdout is not a TTY
+	forceColor bool
+
+	config = kubeval.NewDefaultConfig()
+)
 
 // RootCmd represents the the command to run when kubeval is run
 var RootCmd = &cobra.Command{
@@ -64,7 +66,7 @@ var RootCmd = &cobra.Command{
 				buffer.WriteString(scanner.Text() + "\n")
 			}
 			schemaCache := kubeval.NewSchemaCache()
-			results, err := kubeval.ValidateWithCache(buffer.Bytes(), viper.GetString("filename"), schemaCache)
+			results, err := kubeval.ValidateWithCache(buffer.Bytes(), viper.GetString("filename"), schemaCache, config)
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
@@ -90,7 +92,7 @@ var RootCmd = &cobra.Command{
 					success = false
 					continue
 				}
-				results, err := kubeval.ValidateWithCache(fileContents, fileName, schemaCache)
+				results, err := kubeval.ValidateWithCache(fileContents, fileName, schemaCache, config)
 				if err != nil {
 					log.Error(err)
 					earlyExit()
@@ -149,7 +151,7 @@ func aggregateFiles(args []string) ([]string, error) {
 }
 
 func earlyExit() {
-	if kubeval.ExitOnError {
+	if config.ExitOnError {
 		os.Exit(1)
 	}
 }
@@ -164,21 +166,15 @@ func Execute() {
 }
 
 func init() {
+	kubeval.AddKubevalFlags(RootCmd, config)
+	RootCmd.Flags().BoolVarP(&forceColor, "force-color", "", false, "Force colored output even if stdout is not a TTY")
+	RootCmd.SetVersionTemplate(`{{.Version}}`)
+	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
+
 	viper.SetEnvPrefix("KUBEVAL")
 	viper.AutomaticEnv()
-	RootCmd.Flags().StringVarP(&kubeval.Version, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
-	RootCmd.Flags().StringVarP(&kubeval.SchemaLocation, "schema-location", "", kubeval.DefaultSchemaLocation, "Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION")
-	RootCmd.Flags().BoolVarP(&kubeval.OpenShift, "openshift", "", false, "Use OpenShift schemas instead of upstream Kubernetes")
-	RootCmd.Flags().BoolVarP(&kubeval.Strict, "strict", "", false, "Disallow additional properties not in schema")
-	RootCmd.Flags().BoolVarP(&kubeval.IgnoreMissingSchemas, "ignore-missing-schemas", "", false, "Skip validation for resource definitions without a schema")
-	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
-	RootCmd.Flags().BoolVarP(&kubeval.ExitOnError, "exit-on-error", "", false, "Immediately stop execution when the first error is encountered")
-	RootCmd.Flags().BoolVarP(&forceColor, "force-color", "", false, "Force colored output even if stdout is not a TTY")
-	RootCmd.Flags().StringSliceVar(&kubeval.KindsToSkip, "skip-kinds", []string{}, "Comma-separated list of case-sensitive kinds to skip when validating against schemas")
-	RootCmd.SetVersionTemplate(`{{.Version}}`)
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
-	RootCmd.PersistentFlags().StringP("filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")
-	viper.BindPFlag("filename", RootCmd.PersistentFlags().Lookup("filename"))
+	viper.BindPFlag("filename", RootCmd.Flags().Lookup("filename"))
 }
 
 func main() {
