@@ -216,7 +216,6 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	return result, nil
 }
 
-
 func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema) ([]gojsonschema.ResultError, error) {
 	if IgnoreMissingSchemas {
 		log.Warn("Warning: Set to ignore missing schemas")
@@ -227,13 +226,15 @@ func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaC
 		schemaLoader := gojsonschema.NewReferenceLoader(schemaRef)
 		var err error
 		schema, err = gojsonschema.NewSchema(schemaLoader)
-		if err != nil {
-			if IgnoreMissingSchemas {
-				return []gojsonschema.ResultError{}, nil
-			}
-			return []gojsonschema.ResultError{}, fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err)
-		}
 		schemaCache[schemaRef] = schema
+
+		if err != nil {
+			return handleMissingSchema(fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err))
+		}
+	}
+
+	if schema == nil {
+		return handleMissingSchema(fmt.Errorf("Failed initalizing schema %s: see first error", schemaRef))
 	}
 
 	// Without forcing these types the schema fails to load
@@ -253,6 +254,13 @@ func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaC
 		return results.Errors(), nil
 	}
 	return []gojsonschema.ResultError{}, nil
+}
+
+func handleMissingSchema(err error) ([]gojsonschema.ResultError, error) {
+	if IgnoreMissingSchemas {
+		return []gojsonschema.ResultError{}, nil
+	}
+	return []gojsonschema.ResultError{}, err
 }
 
 // NewSchemaCache returns a new schema cache to be used with
