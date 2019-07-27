@@ -70,7 +70,7 @@ missing schemas, though this may change in a future major version.
 ```
 $ kubeval --ignore-missing-schemas fixtures/test_crd.yaml
 Warning: Set to ignore missing schemas
-The document fixtures/test_crd.yaml contains a valid SealedSecret
+The file fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
 ```
 
 If you would prefer to be more explicit about which custom resources to skip you can instead
