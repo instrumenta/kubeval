@@ -211,10 +211,55 @@ func TestDetermineSchemaForSchemaLocation(t *testing.T) {
 	}
 }
 
-func TestDetermineKind(t *testing.T) {
-	_, err := determineKind("sample")
-	if err == nil {
-		t.Errorf("Shouldn't be able to find a kind when passed a blank string")
+func TestGetString(t *testing.T) {
+	var tests = []struct{
+		body map[string]interface{}
+		key string
+		expectedVal string
+		expectError bool
+	}{
+		{
+			body: map[string]interface{}{"goodKey": "goodVal"},
+			key: "goodKey",
+			expectedVal: "goodVal",
+			expectError: false,
+		},
+		{
+			body: map[string]interface{}{},
+			key: "missingKey",
+			expectedVal: "",
+			expectError: true,
+		},
+		{
+			body: map[string]interface{}{"nilKey": nil},
+			key: "nilKey",
+			expectedVal: "",
+			expectError: true,
+		},
+		{
+			body: map[string]interface{}{"badKey": 5},
+			key: "badKey",
+			expectedVal: "",
+			expectError: true,
+		},
+	}
+
+	for _, test := range tests {
+		actualVal, err := getString(test.body, test.key)
+		if err != nil {
+			if !test.expectError {
+				t.Errorf("Unexpected error: %s", err.Error())
+			}
+			// We expected this error, so move to the next test
+			continue
+		}
+		if test.expectError {
+			t.Errorf("Expected an error, but didn't receive one")
+			continue
+		}
+		if actualVal != test.expectedVal {
+			t.Errorf("Expected %s, got %s", test.expectedVal, actualVal)
+		}
 	}
 }
 

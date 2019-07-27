@@ -2,16 +2,14 @@ package kubeval
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"regexp"
-	"runtime"
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/instrumenta/kubeval/log"
 )
@@ -51,16 +49,6 @@ var ExitOnError bool
 // schema validation
 var KindsToSkip []string
 
-// in is a method which tests whether the `key` is in the set
-func in(set []string, key string) bool {
-	for _, k := range set {
-		if k == key {
-			return true
-		}
-	}
-	return false
-}
-
 // ValidFormat is a type for quickly forcing
 // new formats on the gojsonschema loader
 type ValidFormat struct{}
@@ -79,15 +67,6 @@ type ValidationResult struct {
 	APIVersion             string
 	ValidatedAgainstSchema bool
 	Errors                 []gojsonschema.ResultError
-}
-
-// detectLineBreak returns the relevant platform specific line ending
-func detectLineBreak(haystack []byte) string {
-	windowsLineEnding := bytes.Contains(haystack, []byte("\r\n"))
-	if windowsLineEnding && runtime.GOOS == "windows" {
-		return "\r\n"
-	}
-	return "\n"
 }
 
 func determineSchema(kind string, apiVersion string) string {
@@ -148,57 +127,26 @@ func determineSchema(kind string, apiVersion string) string {
 	return fmt.Sprintf("%s/%s-standalone%s/%s%s.json", baseURL, normalisedVersion, strictSuffix, strings.ToLower(kind), kindSuffix)
 }
 
-func determineKind(body interface{}) (string, error) {
-	cast, _ := body.(map[string]interface{})
-	if _, ok := cast["kind"]; !ok {
-		return "", errors.New("Missing a kind key")
-	}
-	if cast["kind"] == nil {
-		return "", errors.New("Missing a kind value")
-	}
-	return cast["kind"].(string), nil
-}
-
-func determineAPIVersion(body interface{}) (string, error) {
-	cast, _ := body.(map[string]interface{})
-	if _, ok := cast["apiVersion"]; !ok {
-		return "", errors.New("Missing a apiVersion key")
-	}
-	if cast["apiVersion"] == nil {
-		return "", errors.New("Missing a apiVersion value")
-	}
-	return cast["apiVersion"].(string), nil
-}
-
 // validateResource validates a single Kubernetes resource against
 // the relevant schema, detecting the type of resource automatically
 func validateResource(data []byte, fileName string, schemaCache map[string]*gojsonschema.Schema) (ValidationResult, error) {
-	var spec interface{}
 	result := ValidationResult{}
 	result.FileName = fileName
-	err := yaml.Unmarshal(data, &spec)
+	var body map[string]interface{}
+	err := yaml.Unmarshal(data, &body)
 	if err != nil {
-		return result, errors.New("Failed to decode YAML from " + fileName)
-	}
-
-	body := convertToStringKeys(spec)
-
-	if body == nil {
+		return result, fmt.Errorf("Failed to decode YAML from %s: %s", fileName, err.Error())
+	} else if body == nil {
 		return result, nil
 	}
 
-	cast, _ := body.(map[string]interface{})
-	if len(cast) == 0 {
-		return result, nil
-	}
-
-	kind, err := determineKind(body)
+	kind, err := getString(body, "kind")
 	if err != nil {
 		return result, err
 	}
 	result.Kind = kind
 
-	apiVersion, err := determineAPIVersion(body)
+	apiVersion, err := getString(body, "apiVersion")
 	if err != nil {
 		return result, err
 	}
@@ -215,7 +163,6 @@ func validateResource(data []byte, fileName string, schemaCache map[string]*gojs
 	result.Errors = schemaErrors
 	return result, nil
 }
-
 
 func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema) ([]gojsonschema.ResultError, error) {
 	if IgnoreMissingSchemas {

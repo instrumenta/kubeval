@@ -1,24 +1,41 @@
 package kubeval
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"runtime"
+)
 
-// Based on https://stackoverflow.com/questions/40737122/convert-yaml-to-json-without-struct-golang
-// We unmarshal yaml into a value of type interface{},
-// go through the result recursively, and convert each encountered
-// map[interface{}]interface{} to a map[string]interface{} value
-// required to marshall to JSON.
-func convertToStringKeys(i interface{}) interface{} {
-	switch x := i.(type) {
-	case map[interface{}]interface{}:
-		m2 := map[string]interface{}{}
-		for k, v := range x {
-			m2[fmt.Sprintf("%v", k)] = convertToStringKeys(v)
-		}
-		return m2
-	case []interface{}:
-		for i, v := range x {
-			x[i] = convertToStringKeys(v)
+func getString(body map[string]interface{}, key string) (string, error) {
+	value, found := body[key]
+	if !found {
+		return "", fmt.Errorf("Missing '%s' key", key)
+	}
+	if value == nil {
+		return "", fmt.Errorf("Missing '%s' value", key)
+	}
+	typedValue, ok := value.(string)
+	if !ok {
+		return "", fmt.Errorf("Expected string value for key '%s'", key)
+	}
+	return typedValue, nil
+}
+
+// detectLineBreak returns the relevant platform specific line ending
+func detectLineBreak(haystack []byte) string {
+	windowsLineEnding := bytes.Contains(haystack, []byte("\r\n"))
+	if windowsLineEnding && runtime.GOOS == "windows" {
+		return "\r\n"
+	}
+	return "\n"
+}
+
+// in is a method which tests whether the `key` is in the set
+func in(set []string, key string) bool {
+	for _, k := range set {
+		if k == key {
+			return true
 		}
 	}
-	return i
+	return false
 }
