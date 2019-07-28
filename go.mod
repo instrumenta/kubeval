@@ -11,7 +11,6 @@ require (
 	github.com/hashicorp/go-multierror v0.0.0-20180717150148-3d5d8f294aa0
 	github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/logrusorgru/aurora v0.0.0-20190428105938-cea283e61946
 	github.com/magiconair/properties v1.8.0 // indirect
 	github.com/mattn/go-colorable v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect

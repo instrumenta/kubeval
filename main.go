@@ -119,7 +119,6 @@ func logResults(results []kubeval.ValidationResult, success bool) (bool, error) 
 	//// fetch output logger based on enviroments params -- for now we only support
 	//// the stdout logger
 	out := kubeval.NewSTDOutputManager()
-	fmt.Println(out)
 
 	for _, result := range results {
 		if len(result.Errors) > 0 {
@@ -130,6 +129,7 @@ func logResults(results []kubeval.ValidationResult, success bool) (bool, error) 
 			return success, err
 		}
 	}
+
 	return success, nil
 }
 

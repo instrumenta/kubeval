@@ -7,25 +7,23 @@ import (
 // TODO (brendanryan) move these structs to `/log` once we have removed the potential
 // circular dependancy between this package and `/log`
 
-// OutputManager controls how results of the `ccheck` evaluation will be recorded
+// OutputManager controls how results of the `kubeval` evaluation will be recorded
 // and reported to the end user.
 type OutputManager interface {
 	Put(r ValidationResult) error
 	Flush() error
 }
 
-// STDOutputManager reports `ccheck` results to stdout.
+// STDOutputManager reports `kubeval` results to stdout.
 type STDOutputManager struct {
 }
 
-// NewDefaultStdOutputManager instantiates a new instance of STDOutputManager using
-// the default logger.
+// NewSTDOutputManager instantiates a new instance of STDOutputManager.
 func NewSTDOutputManager() *STDOutputManager {
 	return &STDOutputManager{}
 }
 
 func (s *STDOutputManager) Put(result ValidationResult) error {
-
 	if len(result.Errors) > 0 {
 		log.Warn("The file", result.FileName, "contains an invalid", result.Kind)
 		for _, desc := range result.Errors {
