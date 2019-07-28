@@ -24,3 +24,4 @@ func Error(message ...interface{}) {
 	red := color.New(color.FgRed)
 	red.Println(message...)
 }
+
