@@ -94,13 +94,13 @@ func determineBaseURL(config *Config) string {
 
 // validateResource validates a single Kubernetes resource against
 // the relevant schema, detecting the type of resource automatically
-func validateResource(data []byte, fileName string, schemaCache map[string]*gojsonschema.Schema, config *Config) (ValidationResult, error) {
+func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, config *Config) (ValidationResult, error) {
 	result := ValidationResult{}
-	result.FileName = fileName
+	result.FileName = config.FileName
 	var body map[string]interface{}
 	err := yaml.Unmarshal(data, &body)
 	if err != nil {
-		return result, fmt.Errorf("Failed to decode YAML from %s: %s", fileName, err.Error())
+		return result, fmt.Errorf("Failed to decode YAML from %s: %s", result.FileName, err.Error())
 	} else if body == nil {
 		return result, nil
 	}
@@ -184,16 +184,16 @@ func NewSchemaCache() map[string]*gojsonschema.Schema {
 
 // Validate a Kubernetes YAML file, parsing out individual resources
 // and validating them all according to the  relevant schemas
-func Validate(input []byte, fileName string, conf ...*Config) ([]ValidationResult, error) {
+func Validate(input []byte, conf ...*Config) ([]ValidationResult, error) {
 	schemaCache := NewSchemaCache()
-	return ValidateWithCache(input, fileName, schemaCache, conf...)
+	return ValidateWithCache(input, schemaCache, conf...)
 }
 
 // ValidateWithCache validates a Kubernetes YAML file, parsing out individual resources
 // and validating them all according to the relevant schemas
 // Allows passing a kubeval.NewSchemaCache() to cache schemas in-memory
 // between validations
-func ValidateWithCache(input []byte, fileName string, schemaCache map[string]*gojsonschema.Schema, conf ...*Config) ([]ValidationResult, error) {
+func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema, conf ...*Config) ([]ValidationResult, error) {
 	config := NewDefaultConfig()
 	if len(conf) == 1 {
 		config = conf[0]
@@ -203,29 +203,33 @@ func ValidateWithCache(input []byte, fileName string, schemaCache map[string]*go
 
 	if len(input) == 0 {
 		result := ValidationResult{}
-		result.FileName = fileName
+		result.FileName = config.FileName
 		results = append(results, result)
 		return results, nil
 	}
 
 	bits := bytes.Split(input, []byte(detectLineBreak(input)+"---"+detectLineBreak(input)))
 
+	var errors *multierror.Error
+
 	// special case regexp for helm
 	helmSourcePattern := regexp.MustCompile(`^(?:---` + detectLineBreak(input) + `)?# Source: (.*)`)
 
-	var errors *multierror.Error
-
-	// Start with the fileName we were provided; if we detect a new fileName
-	// we'll use that until we find a new one.
-	detectedFileName := fileName
+	// Save the fileName we were provided; if we detect a new fileName
+	// we'll use that, but we'll need to revert to the default afterward
+	originalFileName := config.FileName
+	defer func() {
+		// revert the filename back to the original
+		config.FileName = originalFileName
+	}()
 
 	for _, element := range bits {
 		if len(element) > 0 {
 			if found := helmSourcePattern.FindStringSubmatch(string(element)); found != nil {
-				detectedFileName = found[1]
+				config.FileName = found[1]
 			}
 
-			result, err := validateResource(element, detectedFileName, schemaCache, config)
+			result, err := validateResource(element, schemaCache, config)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 				if config.ExitOnError {
@@ -235,7 +239,7 @@ func ValidateWithCache(input []byte, fileName string, schemaCache map[string]*go
 			results = append(results, result)
 		} else {
 			result := ValidationResult{}
-			result.FileName = detectedFileName
+			result.FileName = config.FileName
 			results = append(results, result)
 		}
 	}

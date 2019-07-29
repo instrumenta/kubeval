@@ -66,7 +66,8 @@ var RootCmd = &cobra.Command{
 				buffer.WriteString(scanner.Text() + "\n")
 			}
 			schemaCache := kubeval.NewSchemaCache()
-			results, err := kubeval.ValidateWithCache(buffer.Bytes(), viper.GetString("filename"), schemaCache, config)
+			config.FileName = viper.GetString("filename")
+			results, err := kubeval.ValidateWithCache(buffer.Bytes(), schemaCache, config)
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
@@ -92,7 +93,8 @@ var RootCmd = &cobra.Command{
 					success = false
 					continue
 				}
-				results, err := kubeval.ValidateWithCache(fileContents, fileName, schemaCache, config)
+				config.FileName = fileName
+				results, err := kubeval.ValidateWithCache(fileContents, schemaCache, config)
 				if err != nil {
 					log.Error(err)
 					earlyExit()
