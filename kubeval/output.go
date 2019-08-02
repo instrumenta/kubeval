@@ -99,7 +99,6 @@ func getStatus(r ValidationResult) status {
 }
 
 func (j *jsonOutputManager) put(r ValidationResult) error {
-
 	// stringify gojsonschema errors
 	// use a pre-allocated slice to ensure the json will have an
 	// empty array in the "zero" case
