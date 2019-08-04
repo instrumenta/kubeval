@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/fatih/color"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -69,7 +69,11 @@ var RootCmd = &cobra.Command{
 				log.Error(err)
 				os.Exit(1)
 			}
-			success = logResults(results, success)
+			success, err = logResults(results, success)
+			if err != nil {
+				log.Error(err)
+				os.Exit(1)
+			}
 		} else {
 			if len(args) < 1 && len(directories) < 1 {
 				log.Error("You must pass at least one file as an argument, or at least one directory to the directories flag")
@@ -97,7 +101,12 @@ var RootCmd = &cobra.Command{
 					success = false
 					continue
 				}
-				success = logResults(results, success)
+				success, err = logResults(results, success)
+				if err != nil {
+					log.Error(err)
+					os.Exit(1)
+				}
+
 			}
 		}
 		if !success {
@@ -106,23 +115,22 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-func logResults(results []kubeval.ValidationResult, success bool) bool {
+func logResults(results []kubeval.ValidationResult, success bool) (bool, error) {
+	//// fetch output logger based on enviroments params -- for now we only support
+	//// the stdout logger
+	out := kubeval.NewSTDOutputManager()
+
 	for _, result := range results {
 		if len(result.Errors) > 0 {
 			success = false
-			log.Warn("The file", result.FileName, "contains an invalid", result.Kind)
-			for _, desc := range result.Errors {
-				log.Info("--->", desc)
-			}
-		} else if result.Kind == "" {
-			log.Success("The file", result.FileName, "contains an empty YAML document")
-		} else if !result.ValidatedAgainstSchema {
-			log.Warn("The file", result.FileName, "containing a", result.Kind, "was not validated against a schema")
-		} else {
-			log.Success("The file", result.FileName, "contains a valid", result.Kind)
+		}
+		err := out.Put(result)
+		if err != nil {
+			return success, err
 		}
 	}
-	return success
+
+	return success, nil
 }
 
 func aggregateFiles(args []string) ([]string, error) {
