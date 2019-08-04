@@ -2,16 +2,20 @@ package kubeval
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
 	"github.com/xeipuuv/gojsonschema"
 )
 
 func TestValidateBlankInput(t *testing.T) {
 	blank := []byte("")
-	_, err := Validate(blank, "sample")
+	config := NewDefaultConfig()
+	config.FileName = "blank"
+	_, err := Validate(blank, config)
 	if err != nil {
 		t.Errorf("Validate should pass when passed a blank string")
 	}
@@ -34,7 +38,9 @@ func TestValidateValidInputs(t *testing.T) {
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
-		_, err := Validate(fileContents, test)
+		config := NewDefaultConfig()
+		config.FileName = test
+		_, err := Validate(fileContents, config)
 		if err != nil {
 			t.Errorf("Validate should pass when testing valid configuration in " + test)
 		}
@@ -60,7 +66,9 @@ func TestValidateValidInputsWithCache(t *testing.T) {
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
-		_, err := ValidateWithCache(fileContents, test, schemaCache)
+		config := NewDefaultConfig()
+		config.FileName = test
+		_, err := ValidateWithCache(fileContents, schemaCache, config)
 		if err != nil {
 			t.Errorf("Validate should pass when testing valid configuration in " + test)
 		}
@@ -75,7 +83,9 @@ func TestValidateInvalidInputs(t *testing.T) {
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
-		_, err := Validate(fileContents, test)
+		config := NewDefaultConfig()
+		config.FileName = test
+		_, err := Validate(fileContents, config)
 		if err == nil {
 			t.Errorf("Validate should not pass when testing invalid configuration in " + test)
 		}
@@ -95,7 +105,9 @@ func TestValidateSourceExtraction(t *testing.T) {
 	}
 	filePath, _ := filepath.Abs("../fixtures/multi_valid_source.yaml")
 	fileContents, _ := ioutil.ReadFile(filePath)
-	results, err := Validate(fileContents, "multi_valid_source.yaml")
+	config := NewDefaultConfig()
+	config.FileName = "multi_valid_source.yaml"
+	results, err := Validate(fileContents, config)
 	if err != nil {
 		t.Fatalf("Unexpected error while validating source: %v", err)
 	}
@@ -107,23 +119,25 @@ func TestValidateSourceExtraction(t *testing.T) {
 }
 
 func TestStrictCatchesAdditionalErrors(t *testing.T) {
-	Strict = true
+	config := NewDefaultConfig()
+	config.Strict = true
+	config.FileName = "extra_property.yaml"
 	filePath, _ := filepath.Abs("../fixtures/extra_property.yaml")
 	fileContents, _ := ioutil.ReadFile(filePath)
-	results, _ := Validate(fileContents, "extra_property.yaml")
+	results, _ := Validate(fileContents, config)
 	if len(results[0].Errors) == 0 {
 		t.Errorf("Validate should not pass when testing for additional properties not in schema")
 	}
 }
 
 func TestValidateMultipleVersions(t *testing.T) {
-	Strict = true
-	Version = "1.14.0"
-	OpenShift = false
+	config := NewDefaultConfig()
+	config.Strict = true
+	config.FileName = "valid_version.yaml"
+	config.KubernetesVersion = "1.14.0"
 	filePath, _ := filepath.Abs("../fixtures/valid_version.yaml")
 	fileContents, _ := ioutil.ReadFile(filePath)
-	results, err := Validate(fileContents, "valid_version.yaml")
-	Version = ""
+	results, err := Validate(fileContents, config)
 	if err != nil || len(results[0].Errors) > 0 {
 		t.Errorf("Validate should pass when testing valid configuration with multiple versions: %v", err)
 	}
@@ -137,7 +151,9 @@ func TestValidateInputsWithErrors(t *testing.T) {
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
-		results, _ := Validate(fileContents, test)
+		config := NewDefaultConfig()
+		config.FileName = test
+		results, _ := Validate(fileContents, config)
 		if len(results[0].Errors) == 0 {
 			t.Errorf("Validate should not pass when testing invalid configuration in " + test)
 		}
@@ -149,10 +165,12 @@ func TestValidateMultipleResourcesWithErrors(t *testing.T) {
 		"multi_invalid_resources.yaml",
 	}
 	for _, test := range tests {
+		config := NewDefaultConfig()
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
-		ExitOnError = true
-		_, err := Validate(fileContents, test)
+		config.ExitOnError = true
+		config.FileName = test
+		_, err := Validate(fileContents, config)
 		if err == nil {
 			t.Errorf("Validate should not pass when testing invalid configuration in " + test)
 		} else if merr, ok := err.(*multierror.Error); ok {
@@ -160,8 +178,8 @@ func TestValidateMultipleResourcesWithErrors(t *testing.T) {
 				t.Errorf("Validate should encounter exactly 1 error when testing invalid configuration in " + test + " with ExitOnError=true")
 			}
 		}
-		ExitOnError = false
-		_, err = Validate(fileContents, test)
+		config.ExitOnError = false
+		_, err = Validate(fileContents, config)
 		if err == nil {
 			t.Errorf("Validate should not pass when testing invalid configuration in " + test)
 		} else if merr, ok := err.(*multierror.Error); ok {
@@ -175,36 +193,53 @@ func TestValidateMultipleResourcesWithErrors(t *testing.T) {
 }
 
 func TestDetermineSchema(t *testing.T) {
-	Strict = false
-	schema := determineSchema("sample", "v1")
+	config := NewDefaultConfig()
+	schema := determineSchema("sample", "v1", config)
 	if schema != "https://kubernetesjsonschema.dev/master-standalone/sample-v1.json" {
 		t.Errorf("Schema should default to master, instead %s", schema)
 	}
 }
 
 func TestDetermineSchemaForVersions(t *testing.T) {
-	Version = "1.0"
-	OpenShift = false
-	schema := determineSchema("sample", "v1")
+	config := NewDefaultConfig()
+	config.KubernetesVersion = "1.0"
+	schema := determineSchema("sample", "v1", config)
 	if schema != "https://kubernetesjsonschema.dev/v1.0-standalone/sample-v1.json" {
 		t.Errorf("Should be able to specify a version, instead %s", schema)
 	}
 }
 
 func TestDetermineSchemaForOpenShift(t *testing.T) {
-	OpenShift = true
-	Version = "master"
-	schema := determineSchema("sample", "v1")
+	config := NewDefaultConfig()
+	config.OpenShift = true
+	schema := determineSchema("sample", "v1", config)
 	if schema != "https://raw.githubusercontent.com/garethr/openshift-json-schema/master/master-standalone/sample.json" {
 		t.Errorf("Should be able to toggle to OpenShift schemas, instead %s", schema)
 	}
 }
 
 func TestDetermineSchemaForSchemaLocation(t *testing.T) {
-	OpenShift = false
-	Version = "master"
-	SchemaLocation = "file:///home/me"
-	schema := determineSchema("sample", "v1")
+	config := NewDefaultConfig()
+	config.SchemaLocation = "file:///home/me"
+	schema := determineSchema("sample", "v1", config)
+	expectedSchema := "file:///home/me/master-standalone/sample-v1.json"
+	if schema != expectedSchema {
+		t.Errorf("Should be able to specify a schema location, expected %s, got %s instead ", expectedSchema, schema)
+	}
+}
+
+func TestDetermineSchemaForEnvVariable(t *testing.T) {
+	oldVal, found := os.LookupEnv("KUBEVAL_SCHEMA_LOCATION")
+	defer func() {
+		if found {
+			os.Setenv("KUBEVAL_SCHEMA_LOCATION", oldVal)
+		} else {
+			os.Unsetenv("KUBEVAL_SCHEMA_LOCATION")
+		}
+	}()
+	config := NewDefaultConfig()
+	os.Setenv("KUBEVAL_SCHEMA_LOCATION", "file:///home/me")
+	schema := determineSchema("sample", "v1", config)
 	expectedSchema := "file:///home/me/master-standalone/sample-v1.json"
 	if schema != expectedSchema {
 		t.Errorf("Should be able to specify a schema location, expected %s, got %s instead ", expectedSchema, schema)
@@ -264,23 +299,50 @@ func TestGetString(t *testing.T) {
 }
 
 func TestSkipCrdSchemaMiss(t *testing.T) {
+	config := NewDefaultConfig()
+	config.FileName = "test_crd.yaml"
 	filePath, _ := filepath.Abs("../fixtures/test_crd.yaml")
 	fileContents, _ := ioutil.ReadFile(filePath)
-	_, err := Validate(fileContents, "test_crd.yaml")
+	_, err := Validate(fileContents)
 	if err == nil {
 		t.Errorf("For custom CRD's with schema missing we should error without IgnoreMissingSchemas flag")
 	}
 
-	IgnoreMissingSchemas = true
-	results, _ := Validate(fileContents, "test_crd.yaml")
+	config.IgnoreMissingSchemas = true
+	results, _ := Validate(fileContents, config)
 	if len(results[0].Errors) != 0 {
 		t.Errorf("For custom CRD's with schema missing we should skip with IgnoreMissingSchemas flag")
 	}
 
-	IgnoreMissingSchemas = false
-	KindsToSkip = []string{"SealedSecret"}
-	results, _ = Validate(fileContents, "test_crd.yaml")
+	config.IgnoreMissingSchemas = false
+	config.KindsToSkip = []string{"SealedSecret"}
+	results, _ = Validate(fileContents, config)
 	if len(results[0].Errors) != 0 {
 		t.Errorf("We should skip resources listed in KindsToSkip")
+	}
+}
+
+func TestFlagAdding(t *testing.T) {
+	cmd := &cobra.Command{}
+	config := &Config{}
+
+	AddKubevalFlags(cmd, config)
+
+	expectedFlags := []string{
+		"exit-on-error",
+		"ignore-missing-schemas",
+		"openshift",
+		"strict",
+		"filename",
+		"skip-kinds",
+		"schema-location",
+		"kubernetes-version",
+	}
+
+	for _, expected := range expectedFlags {
+		flag := cmd.Flags().Lookup(expected)
+		if flag == nil {
+			t.Errorf("Could not find flag '%s'", expected)
+		}
 	}
 }
