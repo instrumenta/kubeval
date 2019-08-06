@@ -120,7 +120,7 @@ var RootCmd = &cobra.Command{
 }
 
 func logResults(outFmt string, results []kubeval.ValidationResult, success bool) (bool, error) {
-	//// fetch output logger based on enviroments params
+	// fetch output logger based on enviroments params
 	out := kubeval.GetOutputManager(outFmt)
 
 	for _, result := range results {
