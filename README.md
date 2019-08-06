@@ -18,39 +18,4 @@ $ echo $?
 1
 ```
 
-## Configuring Output
-
- The output of `kubeval` can be configured using the `--output` flag (`-o`).
-
- As of today `kubeval` supports the following output types:
-
- - Plaintext `--output=stdout`
-- JSON: `--output=json`
-
- #### Example Output
-
- ##### Plaintext
-
- ```console
-$ kubeval my-invalid-rc.yaml
-The document my-invalid-rc.yaml contains an invalid ReplicationController
---> spec.replicas: Invalid type. Expected: integer, given: string
-```
-
- ##### JSON
-
- ```console
- $ kubeval fixtures/invalid.yaml -o json
- [
-         {
-                 "filename": "fixtures/invalid.yaml",
-                 "kind": "ReplicationController",
-                 "status": "invalid",
-                 "errors": [
-                         "spec.replicas: Invalid type. Expected: [integer,null], given: string"
-                 ]
-         }
- ]
-```
-
 For full usage and installation instructions see [kubeval.instrumenta.dev](https://kubeval.instrumenta.dev/).
