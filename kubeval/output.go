@@ -3,6 +3,7 @@ package kubeval
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 
@@ -24,12 +25,14 @@ type outputManager interface {
 const (
 	outputSTD  = "stdout"
 	outputJSON = "json"
+	outputTAP  = "tap"
 )
 
 func validOutputs() []string {
 	return []string{
 		outputSTD,
 		outputJSON,
+		outputTAP,
 	}
 }
 
@@ -39,6 +42,8 @@ func GetOutputManager(outFmt string) outputManager {
 		return newSTDOutputManager()
 	case outputJSON:
 		return newDefaultJSONOutputManager()
+	case outputTAP:
+		return newDefaultTAPOutputManager()
 	default:
 		return newSTDOutputManager()
 	}
@@ -83,7 +88,7 @@ const (
 	statusSkipped = "skipped"
 )
 
-type jsonEvalResult struct {
+type dataEvalResult struct {
 	Filename string   `json:"filename"`
 	Kind     string   `json:"kind"`
 	Status   status   `json:"status"`
@@ -94,7 +99,7 @@ type jsonEvalResult struct {
 type jsonOutputManager struct {
 	logger *log.Logger
 
-	data []jsonEvalResult
+	data []dataEvalResult
 }
 
 func newDefaultJSONOutputManager() *jsonOutputManager {
@@ -132,7 +137,7 @@ func (j *jsonOutputManager) Put(r ValidationResult) error {
 		errs = append(errs, e.String())
 	}
 
-	j.data = append(j.data, jsonEvalResult{
+	j.data = append(j.data, dataEvalResult{
 		Filename: r.FileName,
 		Kind:     r.Kind,
 		Status:   getStatus(r),
@@ -155,5 +160,78 @@ func (j *jsonOutputManager) Flush() error {
 	}
 
 	j.logger.Print(out.String())
+	return nil
+}
+
+// tapOutputManager reports `conftest` results to stdout.
+type tapOutputManager struct {
+	logger *log.Logger
+
+	data []dataEvalResult
+}
+
+// newDefaultTapOutManager instantiates a new instance of tapOutputManager
+// using the default logger.
+func newDefaultTAPOutputManager() *tapOutputManager {
+	return newTAPOutputManager(log.New(os.Stdout, "", 0))
+}
+
+// newTapOutputManager constructs an instance of tapOutputManager given a
+// logger instance.
+func newTAPOutputManager(l *log.Logger) *tapOutputManager {
+	return &tapOutputManager{
+		logger: l,
+	}
+}
+
+func (j *tapOutputManager) Put(r ValidationResult) error {
+	errs := make([]string, 0, len(r.Errors))
+	for _, e := range r.Errors {
+		errs = append(errs, e.String())
+	}
+
+	j.data = append(j.data, dataEvalResult{
+		Filename: r.FileName,
+		Kind:     r.Kind,
+		Status:   getStatus(r),
+		Errors:   errs,
+	})
+
+	return nil
+}
+
+func (j *tapOutputManager) Flush() error {
+	issues := len(j.data)
+	if issues > 0 {
+		total := 0
+		for _, r := range j.data {
+			if len(r.Errors) > 0 {
+				total = total + len(r.Errors)
+			} else {
+				total = total + 1
+			}
+		}
+		j.logger.Print(fmt.Sprintf("1..%d", total))
+		count := 0
+		for _, r := range j.data {
+			count = count + 1
+			var kindMarker string
+			if r.Kind == "" {
+				kindMarker = ""
+			} else {
+				kindMarker = fmt.Sprintf(" (%s)", r.Kind)
+			}
+			if r.Status == "valid" {
+				j.logger.Print("ok ", count, " - ", r.Filename, kindMarker)
+			} else if r.Status == "skipped" {
+				j.logger.Print("ok ", count, " #skip - ", r.Filename, kindMarker)
+			} else if r.Status == "invalid" {
+				for _, e := range r.Errors {
+					j.logger.Print("not ok ", count, " - ", r.Filename, kindMarker, " - ", e)
+					count = count + 1
+				}
+			}
+		}
+	}
 	return nil
 }

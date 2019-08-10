@@ -108,6 +108,7 @@ The file chart/templates/primary.yaml contains a valid ReplicationControlle
 
  - Plaintext `--output=stdout`
 - JSON: `--output=json`
+- TAP: `--output=tap`
 
  ### Example Output
 
@@ -134,6 +135,15 @@ The document my-invalid-rc.yaml contains an invalid ReplicationController
          }
  ]
 ```
+
+#### TAP
+
+```console
+ $ kubeval fixtures/invalid.yaml -o tap
+1..1
+not ok 1 - fixtures/invalid.yaml (ReplicationController) - spec.replicas: Invalid type. Expected: [integer,null], given: string
+```
+
 
 ## Full usage instructions
 

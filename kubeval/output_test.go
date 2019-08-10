@@ -106,13 +106,79 @@ func Test_jsonOutputManager_put(t *testing.T) {
 			s := newJSONOutputManager(log.New(buf, "", 0))
 
 			// record results
-			err := s.put(tt.args.vr)
+			err := s.Put(tt.args.vr)
 			if err != nil {
 				assert.Equal(t, tt.expErr, err)
 			}
 
 			// flush final buffer
-			err = s.flush()
+			err = s.Flush()
+			if err != nil {
+				assert.Equal(t, tt.expErr, err)
+			}
+
+			assert.Equal(t, tt.exp, buf.String())
+		})
+	}
+}
+
+func Test_tapOutputManager_put(t *testing.T) {
+	type args struct {
+		vr ValidationResult
+	}
+
+	tests := []struct {
+		msg    string
+		args   args
+		exp    string
+		expErr error
+	}{
+		{
+			msg: "file with no errors",
+			args: args{
+				vr: ValidationResult{
+					FileName:               "deployment.yaml",
+					Kind:                   "Deployment",
+					ValidatedAgainstSchema: true,
+					Errors:                 nil,
+				},
+			},
+			exp: `1..1
+ok 1 - deployment.yaml (Deployment)
+`,
+		},
+		{
+			msg: "file with errors",
+			args: args{
+				vr: ValidationResult{
+					FileName:               "service.yaml",
+					Kind:                   "Service",
+					ValidatedAgainstSchema: true,
+					Errors: newResultErrors([]string{
+						"i am a error",
+						"i am another error",
+					}),
+				},
+			},
+			exp: `1..2
+not ok 1 - service.yaml (Service) - error: i am a error
+not ok 2 - service.yaml (Service) - error: i am another error
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.msg, func(t *testing.T) {
+			buf := new(bytes.Buffer)
+			s := newTAPOutputManager(log.New(buf, "", 0))
+
+			// record results
+			err := s.Put(tt.args.vr)
+			if err != nil {
+				assert.Equal(t, tt.expErr, err)
+			}
+
+			// flush final buffer
+			err = s.Flush()
 			if err != nil {
 				assert.Equal(t, tt.expErr, err)
 			}
