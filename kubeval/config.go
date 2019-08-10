@@ -1,6 +1,10 @@
 package kubeval
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
 
 // DefaultSchemaLocation is the default location to search for schemas
 const DefaultSchemaLocation = "https://kubernetesjsonschema.dev"
@@ -40,13 +44,16 @@ type Config struct {
 
 	// FileName is the name to be displayed when testing manifests read from stdin
 	FileName string
-}
 
+	// OutputFormat is the name of the output formatter which will be used when
+	// reporting results to the user.
+	OutputFormat string
+}
 
 // NewDefaultConfig creates a Config with default values
 func NewDefaultConfig() *Config {
 	return &Config{
-		FileName: "stdin",
+		FileName:          "stdin",
 		KubernetesVersion: "master",
 	}
 }
@@ -61,5 +68,7 @@ func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
 	cmd.Flags().StringSliceVar(&config.KindsToSkip, "skip-kinds", []string{}, "Comma-separated list of case-sensitive kinds to skip when validating against schemas")
 	cmd.Flags().StringVar(&config.SchemaLocation, "schema-location", "", "Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION")
 	cmd.Flags().StringVarP(&config.KubernetesVersion, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
+	cmd.Flags().StringVarP(&config.OutputFormat, "output", "o", "", fmt.Sprintf("The format of the output of this script. Options are: %v", validOutputs()))
+
 	return cmd
 }

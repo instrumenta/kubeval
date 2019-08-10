@@ -12,19 +12,44 @@ import (
 // TODO (brendanryan) move these structs to `/log` once we have removed the potential
 // circular dependancy between this package and `/log`
 
-// OutputManager controls how results of the `kubeval` evaluation will be recorded
+// outputManager controls how results of the `kubeval` evaluation will be recorded
 // and reported to the end user.
-type OutputManager interface {
+// This interface is kept private to ensure all implementations are closed within
+// this package.
+type outputManager interface {
 	Put(r ValidationResult) error
 	Flush() error
+}
+
+const (
+	outputSTD  = "stdout"
+	outputJSON = "json"
+)
+
+func validOutputs() []string {
+	return []string{
+		outputSTD,
+		outputJSON,
+	}
+}
+
+func GetOutputManager(outFmt string) outputManager {
+	switch outFmt {
+	case outputSTD:
+		return newSTDOutputManager()
+	case outputJSON:
+		return newDefaultJSONOutputManager()
+	default:
+		return newSTDOutputManager()
+	}
 }
 
 // STDOutputManager reports `kubeval` results to stdout.
 type STDOutputManager struct {
 }
 
-// NewSTDOutputManager instantiates a new instance of STDOutputManager.
-func NewSTDOutputManager() *STDOutputManager {
+// newSTDOutputManager instantiates a new instance of STDOutputManager.
+func newSTDOutputManager() *STDOutputManager {
 	return &STDOutputManager{}
 }
 
@@ -98,7 +123,7 @@ func getStatus(r ValidationResult) status {
 	return statusValid
 }
 
-func (j *jsonOutputManager) put(r ValidationResult) error {
+func (j *jsonOutputManager) Put(r ValidationResult) error {
 	// stringify gojsonschema errors
 	// use a pre-allocated slice to ensure the json will have an
 	// empty array in the "zero" case
@@ -117,7 +142,7 @@ func (j *jsonOutputManager) put(r ValidationResult) error {
 	return nil
 }
 
-func (j *jsonOutputManager) flush() error {
+func (j *jsonOutputManager) Flush() error {
 	b, err := json.Marshal(j.data)
 	if err != nil {
 		return err
