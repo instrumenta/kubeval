@@ -24,7 +24,7 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
-brews:
+brew:
   github:
     owner: instrumenta
     name: homebrew-instrumenta
