@@ -72,7 +72,7 @@ var RootCmd = &cobra.Command{
 				log.Error(err)
 				os.Exit(1)
 			}
-			success, err = logResults(results, success)
+			success, err = logResults(config.OutputFormat, results, success)
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
@@ -105,7 +105,7 @@ var RootCmd = &cobra.Command{
 					success = false
 					continue
 				}
-				success, err = logResults(results, success)
+				success, err = logResults(config.OutputFormat, results, success)
 				if err != nil {
 					log.Error(err)
 					os.Exit(1)
@@ -119,10 +119,9 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-func logResults(results []kubeval.ValidationResult, success bool) (bool, error) {
-	//// fetch output logger based on enviroments params -- for now we only support
-	//// the stdout logger
-	out := kubeval.NewSTDOutputManager()
+func logResults(outFmt string, results []kubeval.ValidationResult, success bool) (bool, error) {
+	// fetch output logger based on enviroments params
+	out := kubeval.GetOutputManager(outFmt)
 
 	for _, result := range results {
 		if len(result.Errors) > 0 {
@@ -132,6 +131,11 @@ func logResults(results []kubeval.ValidationResult, success bool) (bool, error) 
 		if err != nil {
 			return success, err
 		}
+	}
+
+	err := out.Flush()
+	if err != nil {
+		return false, err
 	}
 
 	return success, nil

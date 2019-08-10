@@ -87,23 +87,57 @@ The file fixtures/test_crd.yaml containing a SealedSecret was not validated agai
 Helm chart configurations generally have a reference to the source template in a comment
 like so:
 
-```
+```console
 # Source: chart/templates/frontend.yam
 ```
 
 When kubeval detects these comments it will report the relevant chart template files in
 the output.
 
-```
+```console
 $ kubeval fixtures/multi_valid_source.yaml
 The file chart/templates/primary.yaml contains a valid Service
 The file chart/templates/primary.yaml contains a valid ReplicationControlle
 ```
 
+## Configuring Output
+
+ The output of `kubeval` can be configured using the `--output` flag (`-o`).
+
+ As of today `kubeval` supports the following output types:
+
+ - Plaintext `--output=stdout`
+- JSON: `--output=json`
+
+ ### Example Output
+
+ #### Plaintext
+
+ ```console
+$ kubeval my-invalid-rc.yaml
+The document my-invalid-rc.yaml contains an invalid ReplicationController
+--> spec.replicas: Invalid type. Expected: integer, given: string
+```
+
+ #### JSON
+
+ ```console
+ $ kubeval fixtures/invalid.yaml -o json
+ [
+         {
+                 "filename": "fixtures/invalid.yaml",
+                 "kind": "ReplicationController",
+                 "status": "invalid",
+                 "errors": [
+                         "spec.replicas: Invalid type. Expected: [integer,null], given: string"
+                 ]
+         }
+ ]
+```
 
 ## Full usage instructions
 
-```
+```console
 $ kubeval --help
 Validate a Kubernetes YAML file against the relevant schema
 
@@ -119,7 +153,8 @@ Flags:
       --ignore-missing-schemas      Skip validation for resource definitions without a schema
   -v, --kubernetes-version string   Version of Kubernetes to validate against (default "master")
       --openshift                   Use OpenShift schemas instead of upstream Kubernetes
-      --schema-location string      Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION (default "https://kubernetesjsonschema.dev")
+  -o, --output string               The format of the output of this script. Options are: [stdout json]
+      --schema-location string      Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION
       --skip-kinds strings          Comma-separated list of case-sensitive kinds to skip when validating against schemas
       --strict                      Disallow additional properties not in schema
       --version                     version for kubeval
