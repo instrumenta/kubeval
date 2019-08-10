@@ -66,7 +66,7 @@ func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
 	cmd.Flags().BoolVar(&config.Strict, "strict", false, "Disallow additional properties not in schema")
 	cmd.Flags().StringVarP(&config.FileName, "filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")
 	cmd.Flags().StringSliceVar(&config.KindsToSkip, "skip-kinds", []string{}, "Comma-separated list of case-sensitive kinds to skip when validating against schemas")
-	cmd.Flags().StringVar(&config.SchemaLocation, "schema-location", "", "Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION")
+	cmd.Flags().StringVarP(&config.SchemaLocation, "schema-location", "s", "", "Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION.")
 	cmd.Flags().StringVarP(&config.KubernetesVersion, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
 	cmd.Flags().StringVarP(&config.OutputFormat, "output", "o", "", fmt.Sprintf("The format of the output of this script. Options are: %v", validOutputs()))
 
