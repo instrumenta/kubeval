@@ -192,43 +192,59 @@ func TestValidateMultipleResourcesWithErrors(t *testing.T) {
 	}
 }
 
-func TestDetermineSchema(t *testing.T) {
-	config := NewDefaultConfig()
-	schema := determineSchema("sample", "v1", config)
-	if schema != "https://kubernetesjsonschema.dev/master-standalone/sample-v1.json" {
-		t.Errorf("Schema should default to master, instead %s", schema)
+func TestDetermineSchemaURL(t *testing.T) {
+	var tests = []struct {
+		config   *Config
+		baseURL  string
+		kind     string
+		version  string
+		expected string
+	}{
+		{
+			config:   NewDefaultConfig(),
+			baseURL:  "https://base",
+			kind:     "sample",
+			version:  "v1",
+			expected: "https://base/master-standalone/sample-v1.json",
+		},
+		{
+			config:   &Config{KubernetesVersion: "2"},
+			baseURL:  "https://base",
+			kind:     "sample",
+			version:  "v1",
+			expected: "https://base/v2-standalone/sample-v1.json",
+		},
+		{
+			config:   &Config{KubernetesVersion: "master", Strict: true},
+			baseURL:  "https://base",
+			kind:     "sample",
+			version:  "v1",
+			expected: "https://base/master-standalone-strict/sample-v1.json",
+		},
+		{
+			config:   NewDefaultConfig(),
+			baseURL:  "https://base",
+			kind:     "sample",
+			version:  "extensions/v1beta1",
+			expected: "https://base/master-standalone/sample-extensions-v1beta1.json",
+		},
+		{
+			config:   &Config{KubernetesVersion: "master", OpenShift: true},
+			baseURL:  "https://base",
+			kind:     "sample",
+			version:  "v1",
+			expected: "https://base/master-standalone/sample.json",
+		},
 	}
-}
-
-func TestDetermineSchemaForVersions(t *testing.T) {
-	config := NewDefaultConfig()
-	config.KubernetesVersion = "1.0"
-	schema := determineSchema("sample", "v1", config)
-	if schema != "https://kubernetesjsonschema.dev/v1.0-standalone/sample-v1.json" {
-		t.Errorf("Should be able to specify a version, instead %s", schema)
-	}
-}
-
-func TestDetermineSchemaForOpenShift(t *testing.T) {
-	config := NewDefaultConfig()
-	config.OpenShift = true
-	schema := determineSchema("sample", "v1", config)
-	if schema != "https://raw.githubusercontent.com/garethr/openshift-json-schema/master/master-standalone/sample.json" {
-		t.Errorf("Should be able to toggle to OpenShift schemas, instead %s", schema)
+	for _, test := range tests {
+		schemaURL := determineSchemaURL(test.baseURL, test.kind, test.version, test.config)
+		if schemaURL != test.expected {
+			t.Errorf("Schema URL should be %s, got %s", test.expected, schemaURL)
+		}
 	}
 }
 
 func TestDetermineSchemaForSchemaLocation(t *testing.T) {
-	config := NewDefaultConfig()
-	config.SchemaLocation = "file:///home/me"
-	schema := determineSchema("sample", "v1", config)
-	expectedSchema := "file:///home/me/master-standalone/sample-v1.json"
-	if schema != expectedSchema {
-		t.Errorf("Should be able to specify a schema location, expected %s, got %s instead ", expectedSchema, schema)
-	}
-}
-
-func TestDetermineSchemaForEnvVariable(t *testing.T) {
 	oldVal, found := os.LookupEnv("KUBEVAL_SCHEMA_LOCATION")
 	defer func() {
 		if found {
@@ -237,43 +253,70 @@ func TestDetermineSchemaForEnvVariable(t *testing.T) {
 			os.Unsetenv("KUBEVAL_SCHEMA_LOCATION")
 		}
 	}()
-	config := NewDefaultConfig()
-	os.Setenv("KUBEVAL_SCHEMA_LOCATION", "file:///home/me")
-	schema := determineSchema("sample", "v1", config)
-	expectedSchema := "file:///home/me/master-standalone/sample-v1.json"
-	if schema != expectedSchema {
-		t.Errorf("Should be able to specify a schema location, expected %s, got %s instead ", expectedSchema, schema)
+
+	var tests = []struct {
+		config   *Config
+		envVar   string
+		expected string
+	}{
+		{
+			config:   &Config{OpenShift: true},
+			envVar:   "",
+			expected: OpenShiftSchemaLocation,
+		},
+		{
+			config:   &Config{SchemaLocation: "https://base"},
+			envVar:   "",
+			expected: "https://base",
+		},
+		{
+			config:   &Config{},
+			envVar:   "https://base",
+			expected: "https://base",
+		},
+		{
+			config:   &Config{},
+			envVar:   "",
+			expected: DefaultSchemaLocation,
+		},
+	}
+	for i, test := range tests {
+		os.Setenv("KUBEVAL_SCHEMA_LOCATION", test.envVar)
+		schemaBaseURL := determineSchemaBaseURL(test.config)
+		if schemaBaseURL != test.expected {
+			t.Errorf("test #%d: Schema Base URL should be %s, got %s", i, test.expected, schemaBaseURL)
+		}
 	}
 }
 
 func TestGetString(t *testing.T) {
-	var tests = []struct{
-		body map[string]interface{}
-		key string
+	var tests = []struct {
+		body        map[string]interface{}
+		key         string
 		expectedVal string
 		expectError bool
 	}{
 		{
-			body: map[string]interface{}{"goodKey": "goodVal"},
-			key: "goodKey",
+			body:        map[string]interface{}{"goodKey": "goodVal"},
+			key:         "goodKey",
 			expectedVal: "goodVal",
 			expectError: false,
 		},
 		{
-			body: map[string]interface{}{},
-			key: "missingKey",
+			body:        map[string]interface{}{},
+			key:         "missingKey",
 			expectedVal: "",
 			expectError: true,
 		},
 		{
-			body: map[string]interface{}{"nilKey": nil},
-			key: "nilKey",
+			body:        map[string]interface{}{"nilKey": nil},
+			key:         "nilKey",
 			expectedVal: "",
 			expectError: true,
 		},
 		{
-			body: map[string]interface{}{"badKey": 5},
-			key: "badKey",
+			body:        map[string]interface{}{"badKey": 5},
+			key:         "badKey",
 			expectedVal: "",
 			expectError: true,
 		},
@@ -322,6 +365,28 @@ func TestSkipCrdSchemaMiss(t *testing.T) {
 	}
 }
 
+func TestAdditionalSchemas(t *testing.T) {
+	// This test uses a hack - first tell kubeval to use a bogus URL as its
+	// primary search location, then give the DefaultSchemaLocation as an
+	// additional schema.
+	// This should cause kubeval to fail when looking for the schema in the
+	// primary location, then succeed when it finds the schema at the
+	// "additional location"
+	config := NewDefaultConfig()
+	config.SchemaLocation = "testLocation"
+	config.AdditionalSchemaLocations = []string{DefaultSchemaLocation}
+
+	config.FileName = "valid.yaml"
+	filePath, _ := filepath.Abs("../fixtures/valid.yaml")
+	fileContents, _ := ioutil.ReadFile(filePath)
+	results, err := Validate(fileContents, config)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err.Error())
+	} else if len(results[0].Errors) != 0 {
+		t.Errorf("Validate should pass when testing a valid configuration using additional schema")
+	}
+}
+
 func TestFlagAdding(t *testing.T) {
 	cmd := &cobra.Command{}
 	config := &Config{}
@@ -336,6 +401,7 @@ func TestFlagAdding(t *testing.T) {
 		"filename",
 		"skip-kinds",
 		"schema-location",
+		"additional-schema-locations",
 		"kubernetes-version",
 	}
 
