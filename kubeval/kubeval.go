@@ -32,10 +32,15 @@ type ValidationResult struct {
 	Errors                 []gojsonschema.ResultError
 }
 
-func determineSchema(kind, apiVersion string, config *Config) string {
+// VersionKind returns a string representation of this result's apiVersion and kind
+func (v *ValidationResult) VersionKind() string {
+	return v.APIVersion + "/" + v.Kind
+}
+
+func determineSchemaURL(baseURL, kind, apiVersion string, config *Config) string {
 	// We have both the upstream Kubernetes schemas and the OpenShift schemas available
-	// the tool can toggle between then using the config.Openshift boolean flag and here we
-	// use that to select which repository to get the schema from
+	// the tool can toggle between then using the config.OpenShift boolean flag and here we
+	// use that to format the URL to match the required specification.
 
 	// Most of the directories which store the schemas are prefixed with a v so as to
 	// match the tagging in the Kubernetes repository, apart from master.
@@ -49,23 +54,23 @@ func determineSchema(kind, apiVersion string, config *Config) string {
 		strictSuffix = "-strict"
 	}
 
+	if config.OpenShift {
+		// If we're using the openshift schemas, there's no further processing required
+		return fmt.Sprintf("%s/%s-standalone%s/%s.json", baseURL, normalisedVersion, strictSuffix, strings.ToLower(kind))
+	}
+
 	groupParts := strings.Split(apiVersion, "/")
 	versionParts := strings.Split(groupParts[0], ".")
 
-	kindSuffix := ""
-	if !config.OpenShift {
-		if len(groupParts) == 1 {
-			kindSuffix = "-" + strings.ToLower(versionParts[0])
-		} else {
-			kindSuffix = fmt.Sprintf("-%s-%s", strings.ToLower(versionParts[0]), strings.ToLower(groupParts[1]))
-		}
+	kindSuffix := "-" + strings.ToLower(versionParts[0])
+	if len(groupParts) > 1 {
+		kindSuffix += "-" + strings.ToLower(groupParts[1])
 	}
 
-	baseURL := determineBaseURL(config)
 	return fmt.Sprintf("%s/%s-standalone%s/%s%s.json", baseURL, normalisedVersion, strictSuffix, strings.ToLower(kind), kindSuffix)
 }
 
-func determineBaseURL(config *Config) string {
+func determineSchemaBaseURL(config *Config) string {
 	// Order of precendence:
 	// 1. If --openshift is passed, return the openshift schema location
 	// 2. If a --schema-location is passed, use it
@@ -128,21 +133,10 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 }
 
 func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema, config *Config) ([]gojsonschema.ResultError, error) {
-	schemaRef := determineSchema(resource.Kind, resource.APIVersion, config)
-	schema, ok := schemaCache[schemaRef]
-	if !ok {
-		schemaLoader := gojsonschema.NewReferenceLoader(schemaRef)
-		var err error
-		schema, err = gojsonschema.NewSchema(schemaLoader)
-		schemaCache[schemaRef] = schema
 
-		if err != nil {
-			return handleMissingSchema(fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err), config)
-		}
-	}
-
-	if schema == nil {
-		return handleMissingSchema(fmt.Errorf("Failed initalizing schema %s: see first error", schemaRef), config)
+	schema, err := downloadSchema(resource, schemaCache, config)
+	if err != nil {
+		return handleMissingSchema(err, config)
 	}
 
 	// Without forcing these types the schema fails to load
@@ -155,13 +149,51 @@ func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaC
 	documentLoader := gojsonschema.NewGoLoader(body)
 	results, err := schema.Validate(documentLoader)
 	if err != nil {
-		return []gojsonschema.ResultError{}, fmt.Errorf("Problem loading schema from the network at %s: %s", schemaRef, err)
+		// This error can only happen if the Object to validate is poorly formed. There's no hope of saving this one
+		wrappedErr := fmt.Errorf("Problem validating schema. Check JSON formatting: %s", err)
+		return []gojsonschema.ResultError{}, wrappedErr
 	}
 	resource.ValidatedAgainstSchema = true
 	if !results.Valid() {
 		return results.Errors(), nil
 	}
+
 	return []gojsonschema.ResultError{}, nil
+}
+
+func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema, config *Config) (*gojsonschema.Schema, error) {
+	if schema, ok := schemaCache[resource.VersionKind()]; ok {
+		// If the schema was previously cached, there's no work to be done
+		return schema, nil
+	}
+
+	// We haven't cached this schema yet; look for one that works
+	primarySchemaBaseURL := determineSchemaBaseURL(config)
+	primarySchemaRef := determineSchemaURL(primarySchemaBaseURL, resource.Kind, resource.APIVersion, config)
+	schemaRefs := []string{primarySchemaRef}
+
+	for _, additionalSchemaURLs := range config.AdditionalSchemaLocations {
+		additionalSchemaRef := determineSchemaURL(additionalSchemaURLs, resource.Kind, resource.APIVersion, config)
+		schemaRefs = append(schemaRefs, additionalSchemaRef)
+	}
+
+	var errors *multierror.Error
+	for _, schemaRef := range schemaRefs {
+		schemaLoader := gojsonschema.NewReferenceLoader(schemaRef)
+		schema, err := gojsonschema.NewSchema(schemaLoader)
+		if err == nil {
+			// success! cache this and stop looking
+			schemaCache[resource.VersionKind()] = schema
+			return schema, nil
+		}
+		// We couldn't find a schema for this URL, so take a note, then try the next URL
+		wrappedErr := fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err)
+		errors = multierror.Append(errors, wrappedErr)
+	}
+
+	// We couldn't find a schema for this resource. Cache it's lack of existence, then stop
+	schemaCache[resource.VersionKind()] = nil
+	return nil, errors.ErrorOrNil()
 }
 
 func handleMissingSchema(err error, config *Config) ([]gojsonschema.ResultError, error) {
