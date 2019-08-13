@@ -110,7 +110,7 @@ As of today `kubeval` supports the following output types:
 
 #### Plaintext
 
- ```console
+```console
 $ kubeval my-invalid-rc.yaml
 The document my-invalid-rc.yaml contains an invalid ReplicationController
 --> spec.replicas: Invalid type. Expected: integer, given: string
@@ -118,18 +118,18 @@ The document my-invalid-rc.yaml contains an invalid ReplicationController
 
 #### JSON
 
- ```console
- $ kubeval fixtures/invalid.yaml -o json
- [
-         {
-                 "filename": "fixtures/invalid.yaml",
-                 "kind": "ReplicationController",
-                 "status": "invalid",
-                 "errors": [
-                         "spec.replicas: Invalid type. Expected: [integer,null], given: string"
-                 ]
-         }
- ]
+```console
+$ kubeval fixtures/invalid.yaml -o json
+[
+     {
+             "filename": "fixtures/invalid.yaml",
+             "kind": "ReplicationController",
+             "status": "invalid",
+             "errors": [
+                     "spec.replicas: Invalid type. Expected: [integer,null], given: string"
+             ]
+     }
+]
 ```
 
 #### TAP
