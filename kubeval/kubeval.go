@@ -10,8 +10,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/xeipuuv/gojsonschema"
 	"sigs.k8s.io/yaml"
-
-	"github.com/instrumenta/kubeval/log"
 )
 
 // ValidFormat is a type for quickly forcing
@@ -130,9 +128,6 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 }
 
 func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema, config *Config) ([]gojsonschema.ResultError, error) {
-	if config.IgnoreMissingSchemas {
-		log.Warn("Warning: Set to ignore missing schemas")
-	}
 	schemaRef := determineSchema(resource.Kind, resource.APIVersion, config)
 	schema, ok := schemaCache[schemaRef]
 	if !ok {
