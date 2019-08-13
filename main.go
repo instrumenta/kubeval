@@ -83,7 +83,6 @@ var RootCmd = &cobra.Command{
 					os.Exit(1)
 				}
 			}
-
 		} else {
 			if len(args) < 1 && len(directories) < 1 {
 				log.Error("You must pass at least one file as an argument, or at least one directory to the directories flag")
@@ -143,6 +142,8 @@ var RootCmd = &cobra.Command{
 	},
 }
 
+// hasErrors returns truthy if any of the provided results
+// contain errors.
 func hasErrors(res []kubeval.ValidationResult) bool {
 	for _, r := range res {
 		if len(r.Errors) > 0 {
