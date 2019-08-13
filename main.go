@@ -41,6 +41,8 @@ var RootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		success := true
 		windowsStdinIssue := false
+		outputManager := kubeval.GetOutputManager(config.OutputFormat)
+
 		stat, err := os.Stdin.Stat()
 		if err != nil {
 			// Stat() will return an error on Windows in both Powershell and
@@ -72,10 +74,14 @@ var RootCmd = &cobra.Command{
 				log.Error(err)
 				os.Exit(1)
 			}
-			success, err = logResults(config.OutputFormat, results, success)
-			if err != nil {
-				log.Error(err)
-				os.Exit(1)
+			success = !hasErrors(results)
+
+			for _, r := range results {
+				err = outputManager.Put(r)
+				if err != nil {
+					log.Error(err)
+					os.Exit(1)
+				}
 			}
 		} else {
 			if len(args) < 1 && len(directories) < 1 {
@@ -88,6 +94,8 @@ var RootCmd = &cobra.Command{
 				log.Error(err.Error())
 				success = false
 			}
+
+			var aggResults []kubeval.ValidationResult
 			for _, fileName := range files {
 				filePath, _ := filepath.Abs(fileName)
 				fileContents, err := ioutil.ReadFile(filePath)
@@ -105,40 +113,44 @@ var RootCmd = &cobra.Command{
 					success = false
 					continue
 				}
-				success, err = logResults(config.OutputFormat, results, success)
-				if err != nil {
-					log.Error(err)
-					os.Exit(1)
+
+				for _, r := range results {
+					err := outputManager.Put(r)
+					if err != nil {
+						log.Error(err)
+						os.Exit(1)
+					}
 				}
 
+				aggResults = append(aggResults, results...)
 			}
+
+			// only use result of hasErrors check if `success` is currently truthy
+			success = success && !hasErrors(aggResults)
 		}
+
+		// flush any final logs which may be sitting in the buffer
+		err = outputManager.Flush()
+		if err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+
 		if !success {
 			os.Exit(1)
 		}
 	},
 }
 
-func logResults(outFmt string, results []kubeval.ValidationResult, success bool) (bool, error) {
-	// fetch output logger based on enviroments params
-	out := kubeval.GetOutputManager(outFmt)
-
-	for _, result := range results {
-		if len(result.Errors) > 0 {
-			success = false
-		}
-		err := out.Put(result)
-		if err != nil {
-			return success, err
+// hasErrors returns truthy if any of the provided results
+// contain errors.
+func hasErrors(res []kubeval.ValidationResult) bool {
+	for _, r := range res {
+		if len(r.Errors) > 0 {
+			return true
 		}
 	}
-
-	err := out.Flush()
-	if err != nil {
-		return false, err
-	}
-
-	return success, nil
+	return false
 }
 
 func aggregateFiles(args []string) ([]string, error) {
