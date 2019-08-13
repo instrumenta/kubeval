@@ -74,7 +74,7 @@ var RootCmd = &cobra.Command{
 				log.Error(err)
 				os.Exit(1)
 			}
-			success = isSuccess(results)
+			success = !hasErrors(results)
 
 			for _, r := range results {
 				err = outputManager.Put(r)
@@ -126,8 +126,8 @@ var RootCmd = &cobra.Command{
 				aggResults = append(aggResults, results...)
 			}
 
-			// only use result of isSuccess check if `success` is currently truthy
-			success = success && isSuccess(aggResults)
+			// only use result of hasErrors check if `success` is currently truthy
+			success = success && !hasErrors(aggResults)
 		}
 
 		// flush any final logs which may be sitting in the buffer
@@ -143,13 +143,13 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-func isSuccess(res []kubeval.ValidationResult) bool {
+func hasErrors(res []kubeval.ValidationResult) bool {
 	for _, r := range res {
 		if len(r.Errors) > 0 {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 func aggregateFiles(args []string) ([]string, error) {
