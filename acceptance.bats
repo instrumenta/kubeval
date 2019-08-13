@@ -155,3 +155,11 @@
   run bin/kubeval fixtures/invalid.yaml --openshift
   [ "$status" -eq 1 ]
 }
+
+@test "Only prints a single warning when --ignore-missing-schemas is supplied" {
+  run bin/kubeval --ignore-missing-schemas fixtures/valid.yaml fixtures/valid.yaml
+  [ "$status" -eq 0 ]
+  [[ "${lines[0]}" == *"Warning: Set to ignore missing schemas"* ]]
+  [[ "${lines[1]}" == *"The file fixtures/valid.yaml contains a valid ReplicationController"* ]]
+  [[ "${lines[2]}" == *"The file fixtures/valid.yaml contains a valid ReplicationController"* ]]
+}
