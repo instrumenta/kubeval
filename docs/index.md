@@ -13,7 +13,6 @@ $ echo $?
 1
 ```
 
-
 ## Strict schemas
 
 The Kubernetes API allows for specifying properties on objects that are not part of the schemas.
@@ -34,14 +33,13 @@ $ echo $?
 
 If you're using `kubectl` you may find it useful to always set the `--strict` flag.
 
-
 ## Stdin
 
 Alternatively Kubeval can also take input via `stdin` which can make using
 it as part of an automated pipeline easier by removing the need to securely
 manage temporary files.
 
-```
+```console
 $ cat my-invalid-rc.yaml | kubeval
 The document stdin contains an invalid ReplicationController
 --> spec.replicas: Invalid type. Expected: integer, given: string
@@ -52,7 +50,7 @@ $ echo $?
 To make the output of pipelines more readable, a filename can be injected
 to replace `stdin` in the output:
 
-```
+```console
 $ cat my-invalid-rc.yaml | kubeval --filename="my-invalid-rc.yaml"
 The document my-invalid-rc.yaml contains an invalid ReplicationController
 --> spec.replicas: Invalid type. Expected: integer, given: string
@@ -60,14 +58,13 @@ $ echo $?
 1
 ```
 
-
 ## CRDs
 
 Currently kubeval relies on schemas generated from the Kubernetes API. This means it's not
 possible to validate resources using CRDs. Currently you need to pass a flag to ignore
 missing schemas, though this may change in a future major version.
 
-```
+```console
 $ kubeval --ignore-missing-schemas fixtures/test_crd.yaml
 Warning: Set to ignore missing schemas
 The file fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
@@ -76,11 +73,10 @@ The file fixtures/test_crd.yaml containing a SealedSecret was not validated agai
 If you would prefer to be more explicit about which custom resources to skip you can instead
 provide a list of resources to skip like so.
 
-```
+```console
 $ kubeval --skip-kinds SealedSecret fixtures/test_crd.yam
 The file fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
 ```
-
 
 ## Helm
 
@@ -102,17 +98,17 @@ The file chart/templates/primary.yaml contains a valid ReplicationControlle
 
 ## Configuring Output
 
- The output of `kubeval` can be configured using the `--output` flag (`-o`).
+The output of `kubeval` can be configured using the `--output` flag (`-o`).
 
- As of today `kubeval` supports the following output types:
+As of today `kubeval` supports the following output types:
 
- - Plaintext `--output=stdout`
+- Plaintext `--output=stdout`
 - JSON: `--output=json`
 - TAP: `--output=tap`
 
- ### Example Output
+### Example Output
 
- #### Plaintext
+#### Plaintext
 
  ```console
 $ kubeval my-invalid-rc.yaml
@@ -120,7 +116,7 @@ The document my-invalid-rc.yaml contains an invalid ReplicationController
 --> spec.replicas: Invalid type. Expected: integer, given: string
 ```
 
- #### JSON
+#### JSON
 
  ```console
  $ kubeval fixtures/invalid.yaml -o json
@@ -143,7 +139,6 @@ The document my-invalid-rc.yaml contains an invalid ReplicationController
 1..1
 not ok 1 - fixtures/invalid.yaml (ReplicationController) - spec.replicas: Invalid type. Expected: [integer,null], given: string
 ```
-
 
 ## Full usage instructions
 
@@ -172,16 +167,16 @@ Flags:
 
 The command has three important features:
 
-* You can pass one or more files as arguments, including using wildcard
+- You can pass one or more files as arguments, including using wildcard
   expansion. Each file will be validated in turn, and `kubeval` will
   exit with a non-zero code if _any_ of the files fail validation.
-* You can toggle between the upstream Kubernetes definitions and the
+- You can toggle between the upstream Kubernetes definitions and the
   expanded OpenShift ones using the `--openshift` flag. The default is
   to use the upstream Kubernetes definitions.
-* You can pass a version of Kubernetes or OpenShift and the relevant
+- You can pass a version of Kubernetes or OpenShift and the relevant
   type schemas for that version will be used. For instance:
 
-```
+```console
 $ kubeval -v 1.6.6 my-deployment.yaml
 $ kubeval --openshift -v 1.5.1 my-deployment.yaml
 ```
