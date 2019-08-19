@@ -110,13 +110,13 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 
 	kind, err := getString(body, "kind")
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("Error with %s: %s", result.FileName, err.Error())
 	}
 	result.Kind = kind
 
 	apiVersion, err := getString(body, "apiVersion")
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("Error with %s: %s", result.FileName, err.Error())
 	}
 	result.APIVersion = apiVersion
 
@@ -126,7 +126,7 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 
 	schemaErrors, err := validateAgainstSchema(body, &result, schemaCache, config)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("Error with %s: %s", result.FileName, err.Error())
 	}
 	result.Errors = schemaErrors
 	return result, nil
@@ -178,6 +178,7 @@ func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonsc
 	}
 
 	var errors *multierror.Error
+
 	for _, schemaRef := range schemaRefs {
 		schemaLoader := gojsonschema.NewReferenceLoader(schemaRef)
 		schema, err := gojsonschema.NewSchema(schemaLoader)
@@ -190,6 +191,10 @@ func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonsc
 		wrappedErr := fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err)
 		errors = multierror.Append(errors, wrappedErr)
 	}
+
+    if errors != nil {
+	    errors.ErrorFormat = singleLineErrorFormat
+    }
 
 	// We couldn't find a schema for this resource. Cache it's lack of existence, then stop
 	schemaCache[resource.VersionKind()] = nil
@@ -270,5 +275,17 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 			results = append(results, result)
 		}
 	}
+
+    if errors != nil {
+	    errors.ErrorFormat = singleLineErrorFormat
+    }
 	return results, errors.ErrorOrNil()
+}
+
+func singleLineErrorFormat(es []error) string {
+    messages := make([]string, len(es))
+    for i, e := range es {
+        messages[i] = e.Error()
+    }
+    return strings.Join(messages, "\n")
 }
