@@ -39,7 +39,7 @@ var RootCmd = &cobra.Command{
 	Long:    `Validate a Kubernetes YAML file against the relevant schema`,
 	Version: fmt.Sprintf("Version: %s\nCommit: %s\nDate: %s\n", version, commit, date),
 	Run: func(cmd *cobra.Command, args []string) {
-		if config.IgnoreMissingSchemas {
+		if config.IgnoreMissingSchemas && !config.Quiet {
 			log.Warn("Warning: Set to ignore missing schemas")
 		}
 		success := true

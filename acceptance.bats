@@ -163,3 +163,9 @@
   [[ "${lines[1]}" == *"The file fixtures/valid.yaml contains a valid ReplicationController"* ]]
   [[ "${lines[2]}" == *"The file fixtures/valid.yaml contains a valid ReplicationController"* ]]
 }
+
+@test "Does not print warnings if --quiet is supplied" {
+  run bin/kubeval --ignore-missing-schemas --quiet fixtures/valid.yaml
+  [ "$status" -eq 0 ]
+  [ "$output" = "The file fixtures/valid.yaml contains a valid ReplicationController" ]
+}
