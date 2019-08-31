@@ -53,6 +53,10 @@ type Config struct {
 	// OutputFormat is the name of the output formatter which will be used when
 	// reporting results to the user.
 	OutputFormat string
+
+	// Quiet indicates whether non-results output should be emitted to the applications
+	// log.
+	Quiet bool
 }
 
 // NewDefaultConfig creates a Config with default values
@@ -72,9 +76,10 @@ func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
 	cmd.Flags().StringVarP(&config.FileName, "filename", "f", "stdin", "filename to be displayed when testing manifests read from stdin")
 	cmd.Flags().StringSliceVar(&config.KindsToSkip, "skip-kinds", []string{}, "Comma-separated list of case-sensitive kinds to skip when validating against schemas")
 	cmd.Flags().StringVarP(&config.SchemaLocation, "schema-location", "s", "", "Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION.")
-	cmd.Flags().StringSliceVar(&config.AdditionalSchemaLocations , "additional-schema-locations", []string{}, "Comma-seperated list of secondary base URLs used to download schemas")
+	cmd.Flags().StringSliceVar(&config.AdditionalSchemaLocations, "additional-schema-locations", []string{}, "Comma-seperated list of secondary base URLs used to download schemas")
 	cmd.Flags().StringVarP(&config.KubernetesVersion, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
 	cmd.Flags().StringVarP(&config.OutputFormat, "output", "o", "", fmt.Sprintf("The format of the output of this script. Options are: %v", validOutputs()))
+	cmd.Flags().BoolVar(&config.Quiet, "quiet", false, "Silences any output aside from the direct results")
 
 	return cmd
 }
