@@ -166,7 +166,7 @@ func aggregateFiles(args []string) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
+			if !info.IsDir() && (strings.HasSuffix(info.Name(), ".yaml") || strings.HasSuffix(info.Name(), ".yml")) {
 				files = append(files, path)
 			}
 			return nil
