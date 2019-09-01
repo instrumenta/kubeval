@@ -2,25 +2,29 @@ package log
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/fatih/color"
+	multierror "github.com/hashicorp/go-multierror"
 )
 
-func Info(message ...interface{}) {
-	fmt.Println(message...)
+func Success(message ...string) {
+	green := color.New(color.FgGreen).SprintFunc()
+	fmt.Printf("%s - %v\n", green("PASS"), strings.Join(message, " "))
 }
 
-func Success(message ...interface{}) {
-	green := color.New(color.FgGreen)
-	green.Println(message...)
+func Warn(message ...string) {
+	yellow := color.New(color.FgYellow).SprintFunc()
+	fmt.Printf("%s - %v\n", yellow("WARN"), strings.Join(message, " "))
 }
 
-func Warn(message ...interface{}) {
-	yellow := color.New(color.FgYellow)
-	yellow.Println(message...)
-}
-
-func Error(message ...interface{}) {
-	red := color.New(color.FgRed)
-	red.Println(message...)
+func Error(message error) {
+	if merr, ok := message.(*multierror.Error); ok {
+		for _, serr := range merr.Errors {
+			Error(serr)
+		}
+	} else {
+		red := color.New(color.FgRed).SprintFunc()
+		fmt.Printf("%s - %v\n", red("ERR "), message)
+	}
 }

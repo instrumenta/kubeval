@@ -60,16 +60,15 @@ func newSTDOutputManager() *STDOutputManager {
 
 func (s *STDOutputManager) Put(result ValidationResult) error {
 	if len(result.Errors) > 0 {
-		kLog.Warn("The file", result.FileName, "contains an invalid", result.Kind)
 		for _, desc := range result.Errors {
-			kLog.Info("--->", desc)
+			kLog.Warn(result.FileName, "contains an invalid", result.Kind, "-", desc.String())
 		}
 	} else if result.Kind == "" {
-		kLog.Success("The file", result.FileName, "contains an empty YAML document")
+		kLog.Success(result.FileName, "contains an empty YAML document")
 	} else if !result.ValidatedAgainstSchema {
-		kLog.Warn("The file", result.FileName, "containing a", result.Kind, "was not validated against a schema")
+		kLog.Warn(result.FileName, "containing a", result.Kind, "was not validated against a schema")
 	} else {
-		kLog.Success("The file", result.FileName, "contains a valid", result.Kind)
+		kLog.Success(result.FileName, "contains a valid", result.Kind)
 	}
 
 	return nil

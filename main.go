@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -40,7 +41,7 @@ var RootCmd = &cobra.Command{
 	Version: fmt.Sprintf("Version: %s\nCommit: %s\nDate: %s\n", version, commit, date),
 	Run: func(cmd *cobra.Command, args []string) {
 		if config.IgnoreMissingSchemas && !config.Quiet {
-			log.Warn("Warning: Set to ignore missing schemas")
+			log.Warn("Set to ignore missing schemas")
 		}
 		success := true
 		windowsStdinIssue := false
@@ -88,13 +89,13 @@ var RootCmd = &cobra.Command{
 			}
 		} else {
 			if len(args) < 1 && len(directories) < 1 {
-				log.Error("You must pass at least one file as an argument, or at least one directory to the directories flag")
+				log.Error(errors.New("You must pass at least one file as an argument, or at least one directory to the directories flag"))
 				os.Exit(1)
 			}
 			schemaCache := kubeval.NewSchemaCache()
 			files, err := aggregateFiles(args)
 			if err != nil {
-				log.Error(err.Error())
+				log.Error(err)
 				success = false
 			}
 
@@ -103,7 +104,7 @@ var RootCmd = &cobra.Command{
 				filePath, _ := filepath.Abs(fileName)
 				fileContents, err := ioutil.ReadFile(filePath)
 				if err != nil {
-					log.Error("Could not open file", fileName)
+					log.Error(fmt.Errorf("Could not open file %v", fileName))
 					earlyExit()
 					success = false
 					continue

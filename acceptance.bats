@@ -3,49 +3,49 @@
 @test "Pass when parsing a valid Kubernetes config YAML file" {
   run bin/kubeval fixtures/valid.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "The file fixtures/valid.yaml contains a valid ReplicationController" ]
+  [ "$output" = "PASS - fixtures/valid.yaml contains a valid ReplicationController" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config YAML file on stdin" {
   run bash -c "cat fixtures/valid.yaml | bin/kubeval"
   [ "$status" -eq 0 ]
-  [ "$output" = "The file stdin contains a valid ReplicationController" ]
+  [ "$output" = "PASS - stdin contains a valid ReplicationController" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config YAML file explicitly on stdin" {
   run bash -c "cat fixtures/valid.yaml | bin/kubeval -"
   [ "$status" -eq 0 ]
-  [ "$output" = "The file stdin contains a valid ReplicationController" ]
+  [ "$output" = "PASS - stdin contains a valid ReplicationController" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config JSON file" {
   run bin/kubeval fixtures/valid.json
   [ "$status" -eq 0 ]
-  [ "$output" = "The file fixtures/valid.json contains a valid Deployment" ]
+  [ "$output" = "PASS - fixtures/valid.json contains a valid Deployment" ]
 }
 
 @test "Pass when parsing a Kubernetes file with string and integer quantities" {
   run bin/kubeval fixtures/quantity.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "The file fixtures/quantity.yaml contains a valid LimitRange" ]
+  [ "$output" = "PASS - fixtures/quantity.yaml contains a valid LimitRange" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config file with int_to_string vars" {
   run bin/kubeval fixtures/int_or_string.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "The file fixtures/int_or_string.yaml contains a valid Service" ]
+  [ "$output" = "PASS - fixtures/int_or_string.yaml contains a valid Service" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config file with null arrays" {
   run bin/kubeval fixtures/null_array.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "The file fixtures/null_array.yaml contains a valid Deployment" ]
+  [ "$output" = "PASS - fixtures/null_array.yaml contains a valid Deployment" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config file with null strings" {
   run bin/kubeval fixtures/null_string.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "The file fixtures/null_string.yaml contains a valid Service" ]
+  [ "$output" = "PASS - fixtures/null_string.yaml contains a valid Service" ]
 }
 
 @test "Pass when parsing a multi-document config file" {
@@ -71,19 +71,19 @@
 @test "Return relevant error for non-existent file" {
   run bin/kubeval fixtures/not-here
   [ "$status" -eq 1 ]
-  [ $(expr "$output" : "^Could not open file") -ne 0 ]
+  [ $(expr "$output" : "^ERR  - Could not open file") -ne 0 ]
 }
 
 @test "Pass when parsing a blank config file" {
    run bin/kubeval fixtures/blank.yaml
    [ "$status" -eq 0 ]
-   [ "$output" = "The file fixtures/blank.yaml contains an empty YAML document" ]
+   [ "$output" = "PASS - fixtures/blank.yaml contains an empty YAML document" ]
  }
 
  @test "Pass when parsing a blank config file with a comment" {
    run bin/kubeval fixtures/comment.yaml
    [ "$status" -eq 0 ]
-   [ "$output" = "The file fixtures/comment.yaml contains an empty YAML document" ]
+   [ "$output" = "PASS - fixtures/comment.yaml contains an empty YAML document" ]
  }
 
 @test "Return relevant error for YAML missing kind key" {
@@ -159,13 +159,13 @@
 @test "Only prints a single warning when --ignore-missing-schemas is supplied" {
   run bin/kubeval --ignore-missing-schemas fixtures/valid.yaml fixtures/valid.yaml
   [ "$status" -eq 0 ]
-  [[ "${lines[0]}" == *"Warning: Set to ignore missing schemas"* ]]
-  [[ "${lines[1]}" == *"The file fixtures/valid.yaml contains a valid ReplicationController"* ]]
-  [[ "${lines[2]}" == *"The file fixtures/valid.yaml contains a valid ReplicationController"* ]]
+  [[ "${lines[0]}" == *"WARN - Set to ignore missing schemas"* ]]
+  [[ "${lines[1]}" == *"PASS - fixtures/valid.yaml contains a valid ReplicationController"* ]]
+  [[ "${lines[2]}" == *"PASS - fixtures/valid.yaml contains a valid ReplicationController"* ]]
 }
 
 @test "Does not print warnings if --quiet is supplied" {
   run bin/kubeval --ignore-missing-schemas --quiet fixtures/valid.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "The file fixtures/valid.yaml contains a valid ReplicationController" ]
+  [ "$output" = "PASS - fixtures/valid.yaml contains a valid ReplicationController" ]
 }
