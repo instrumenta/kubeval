@@ -22,8 +22,8 @@ results, err := kubeval.Validate(fileContents, fileName)
 The method signature for `Validate` is:
 
 ```go
-Validate(config []byte, fileName string) ([]ValidationResult, error)
+Validate(input []byte, config kubeval.Config) ([]ValidationResult, error)
 ```
 
 The simplest way of seeing it's usage is probably in the `kubeval`
-[command line tool source code](https://github.com/instrumenta/kubeval/blob/master/cmd/root.go).
+[command line tool source code](https://github.com/instrumenta/kubeval/blob/master/main.go).

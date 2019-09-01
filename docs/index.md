@@ -7,8 +7,7 @@ At the most basic level, Kubeval is used like so:
 
 ```console
 $ kubeval my-invalid-rc.yaml
-The document my-invalid-rc.yaml contains an invalid ReplicationController
---> spec.replicas: Invalid type. Expected: integer, given: string
+WANR - my-invalid-rc.yaml contains an invalid ReplicationController - spec.replicas: Invalid type. Expected: integer, given: string
 $ echo $?
 1
 ```
@@ -21,12 +20,11 @@ used to simulate this behaviour using the `--strict` flag.
 
 ```console
 $ kubeval additional-properties.yaml
-The document additional-properties.yaml contains a valid ReplicationController
+PASS - additional-properties.yaml contains a valid ReplicationController
 $ echo $?
 0
 $ kubeval --strict additional-properties.yaml
-The document additional-properties.yaml contains an invalid ReplicationController
----> spec: Additional property replicas is not allowed
+WARN - additional-properties.yaml contains an invalid ReplicationController - spec: Additional property replicas is not allowed
 $ echo $?
 1
 ```
@@ -41,8 +39,7 @@ manage temporary files.
 
 ```console
 $ cat my-invalid-rc.yaml | kubeval
-The document stdin contains an invalid ReplicationController
---> spec.replicas: Invalid type. Expected: integer, given: string
+WARN -  stdin contains an invalid ReplicationController - spec.replicas: Invalid type. Expected: integer, given: string
 $ echo $?
 1
 ```
@@ -52,8 +49,7 @@ to replace `stdin` in the output:
 
 ```console
 $ cat my-invalid-rc.yaml | kubeval --filename="my-invalid-rc.yaml"
-The document my-invalid-rc.yaml contains an invalid ReplicationController
---> spec.replicas: Invalid type. Expected: integer, given: string
+WARN -  my-invalid-rc.yaml contains an invalid ReplicationController - spec.replicas: Invalid type. Expected: integer, given: string
 $ echo $?
 1
 ```
@@ -66,8 +62,8 @@ missing schemas, though this may change in a future major version.
 
 ```console
 $ kubeval --ignore-missing-schemas fixtures/test_crd.yaml
-Warning: Set to ignore missing schemas
-The file fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
+WARN - Set to ignore missing schemas
+WARN - fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
 ```
 
 If you would prefer to be more explicit about which custom resources to skip you can instead
@@ -75,7 +71,7 @@ provide a list of resources to skip like so.
 
 ```console
 $ kubeval --skip-kinds SealedSecret fixtures/test_crd.yam
-The file fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
+WARN - fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
 ```
 
 ## Helm
@@ -92,8 +88,8 @@ the output.
 
 ```console
 $ kubeval fixtures/multi_valid_source.yaml
-The file chart/templates/primary.yaml contains a valid Service
-The file chart/templates/primary.yaml contains a valid ReplicationControlle
+PASS - chart/templates/primary.yaml contains a valid Service
+PASS - chart/templates/primary.yaml contains a valid ReplicationControlle
 ```
 
 ## Configuring Output
@@ -112,8 +108,7 @@ As of today `kubeval` supports the following output types:
 
 ```console
 $ kubeval my-invalid-rc.yaml
-The document my-invalid-rc.yaml contains an invalid ReplicationController
---> spec.replicas: Invalid type. Expected: integer, given: string
+WARN - my-invalid-rc.yaml contains an invalid ReplicationController - spec.replicas: Invalid type. Expected: integer, given: string
 ```
 
 #### JSON

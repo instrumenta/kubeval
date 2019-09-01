@@ -12,8 +12,7 @@ Card](https://goreportcard.com/badge/github.com/instrumenta/kubeval)](https://go
 
 ```
 $ kubeval my-invalid-rc.yaml
-The document my-invalid-rc.yaml contains an invalid ReplicationController
---> spec.replicas: Invalid type. Expected: integer, given: string
+WARN - fixtures/my-invalid-rc.yaml contains an invalid ReplicationController - spec.replicas: Invalid type. Expected: [integer,null], given: string
 $ echo $?
 1
 ```
