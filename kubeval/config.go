@@ -14,6 +14,12 @@ const OpenShiftSchemaLocation = "https://raw.githubusercontent.com/garethr/opens
 
 // A Config object contains various configuration data for kubeval
 type Config struct {
+	// DefaultNamespace is the namespace to assume in resources
+	// if no namespace is set in `metadata:namespace` (as used with
+	// `kubectl apply --namespace ...` or `helm install --namespace ...`,
+	// for example)
+	DefaultNamespace string
+
 	// KubernetesVersion represents the version of Kubernetes
 	// for which we should load the schema
 	KubernetesVersion string
@@ -69,6 +75,7 @@ type Config struct {
 // NewDefaultConfig creates a Config with default values
 func NewDefaultConfig() *Config {
 	return &Config{
+		DefaultNamespace:  "default",
 		FileName:          "stdin",
 		KubernetesVersion: "master",
 	}
@@ -76,6 +83,7 @@ func NewDefaultConfig() *Config {
 
 // AddKubevalFlags adds the default flags for kubeval to cmd
 func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
+	cmd.Flags().StringVarP(&config.DefaultNamespace, "default-namespace", "n", "default", "Namespace to assume in resources if no namespace is set in metadata:namespace")
 	cmd.Flags().BoolVar(&config.ExitOnError, "exit-on-error", false, "Immediately stop execution when the first error is encountered")
 	cmd.Flags().BoolVar(&config.IgnoreMissingSchemas, "ignore-missing-schemas", false, "Skip validation for resource definitions without a schema")
 	cmd.Flags().BoolVar(&config.OpenShift, "openshift", false, "Use OpenShift schemas instead of upstream Kubernetes")

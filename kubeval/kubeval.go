@@ -109,21 +109,22 @@ func determineSchemaBaseURL(config *Config) string {
 }
 
 // validateResource validates a single Kubernetes resource against
-// the relevant schema, detecting the type of resource automatically
-func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, config *Config) (ValidationResult, error) {
+// the relevant schema, detecting the type of resource automatically.
+// Returns the result and raw YAML body as map.
+func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, config *Config) (ValidationResult, map[string]interface{}, error) {
 	result := ValidationResult{}
 	result.FileName = config.FileName
 	var body map[string]interface{}
 	err := yaml.Unmarshal(data, &body)
 	if err != nil {
-		return result, fmt.Errorf("Failed to decode YAML from %s: %s", result.FileName, err.Error())
+		return result, body, fmt.Errorf("Failed to decode YAML from %s: %s", result.FileName, err.Error())
 	} else if body == nil {
-		return result, nil
+		return result, body, nil
 	}
 
 	name, err := getStringAt(body, []string{"metadata", "name"})
 	if err != nil {
-		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())
+		return result, body, fmt.Errorf("%s: %s", result.FileName, err.Error())
 	}
 	result.ResourceName = name
 
@@ -135,30 +136,30 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 
 	kind, err := getString(body, "kind")
 	if err != nil {
-		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())
+		return result, body, fmt.Errorf("%s: %s", result.FileName, err.Error())
 	}
 	result.Kind = kind
 
 	apiVersion, err := getString(body, "apiVersion")
 	if err != nil {
-		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())
+		return result, body, fmt.Errorf("%s: %s", result.FileName, err.Error())
 	}
 	result.APIVersion = apiVersion
 
 	if in(config.KindsToSkip, kind) {
-		return result, nil
+		return result, body, nil
 	}
 
 	if in(config.KindsToReject, kind) {
-		return result, fmt.Errorf("Prohibited resourse kind '%s' in %s", kind, result.FileName)
+		return result, body, fmt.Errorf("Prohibited resource kind '%s' in %s", kind, result.FileName)
 	}
 
 	schemaErrors, err := validateAgainstSchema(body, &result, schemaCache, config)
 	if err != nil {
-		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())
+		return result, body, fmt.Errorf("%s: %s", result.FileName, err.Error())
 	}
 	result.Errors = schemaErrors
-	return result, nil
+	return result, body, nil
 }
 
 func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema, config *Config) ([]gojsonschema.ResultError, error) {
@@ -263,6 +264,10 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 
 	results := make([]ValidationResult, 0)
 
+	if len(config.DefaultNamespace) == 0 {
+		return results, fmt.Errorf("Default namespace ('-n/--default-namespace' flag) must not be empty")
+	}
+
 	if len(input) == 0 {
 		result := ValidationResult{}
 		result.FileName = config.FileName
@@ -303,17 +308,45 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 		config.FileName = originalFileName
 	}()
 
+	seenResourcesSet := make(map[[4]string]bool) // set of [API version, kind, namespace, name]
+
 	for _, element := range bits {
 		if len(element) > 0 {
 			if found := helmSourcePattern.FindStringSubmatch(string(element)); found != nil {
 				config.FileName = found[1]
 			}
 
-			result, err := validateResource(element, schemaCache, config)
+			result, body, err := validateResource(element, schemaCache, config)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 				if config.ExitOnError {
 					return results, errors
+				}
+			} else {
+				if !in(config.KindsToSkip, result.Kind) {
+
+					metadata, _ := getObject(body, "metadata")
+					if metadata != nil {
+						namespace, _ := getString(metadata, "namespace")
+						name, _ := getString(metadata, "name")
+
+						var resolvedNamespace string
+						if len(namespace) > 0 {
+							resolvedNamespace = namespace
+						} else {
+							resolvedNamespace = config.DefaultNamespace
+						}
+
+						// If resource has `metadata:name` attribute
+						if len(resolvedNamespace) > 0 && len(name) > 0 {
+							key := [4]string{result.APIVersion, result.Kind, resolvedNamespace, name}
+							if _, hasDuplicate := seenResourcesSet[key]; hasDuplicate {
+								errors = multierror.Append(errors, fmt.Errorf("%s: Duplicate '%s' resource '%s' in namespace '%s'", result.FileName, result.Kind, name, namespace))
+							}
+
+							seenResourcesSet[key] = true
+						}
+					}
 				}
 			}
 			results = append(results, result)

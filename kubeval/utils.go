@@ -7,6 +7,21 @@ import (
 	"strings"
 )
 
+func getObject(body map[string]interface{}, key string) (map[string]interface{}, error) {
+	value, found := body[key]
+	if !found {
+		return nil, fmt.Errorf("Missing '%s' key", key)
+	}
+	if value == nil {
+		return nil, fmt.Errorf("Missing '%s' value", key)
+	}
+	typedValue, ok := value.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("Expected object value for key '%s'", key)
+	}
+	return typedValue, nil
+}
+
 func getStringAt(body map[string]interface{}, path []string) (string, error) {
 	obj := body
 	visited := []string{}

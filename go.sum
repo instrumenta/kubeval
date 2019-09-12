@@ -25,6 +25,8 @@ github.com/mitchellh/mapstructure v0.0.0-20180715050151-f15292f7a699 h1:KXZJFdun
 github.com/mitchellh/mapstructure v0.0.0-20180715050151-f15292f7a699/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/pelletier/go-toml v0.0.0-20180724185102-c2dbbc24a979 h1:Uh8pTMDzw+nuDTW7lyxcpmYqQJFE8SnO93F3lyY4XzY=
 github.com/pelletier/go-toml v0.0.0-20180724185102-c2dbbc24a979/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/spf13/afero v1.1.1 h1:Lt3ihYMlE+lreX1GS4Qw4ZsNpYQLxIXKBTEOXm3nt6I=
