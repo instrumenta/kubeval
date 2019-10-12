@@ -12,24 +12,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// ValidFormat is a type for quickly forcing
-// new formats on the gojsonschema loader
-type ValidFormat struct{}
-
-// IsFormat always returns true and meets the
-// gojsonschema.FormatChecker interface
-func (f ValidFormat) IsFormat(input interface{}) bool {
-	return true
-}
-
 // ValidationResult contains the details from
 // validating a given Kubernetes resource
 type ValidationResult struct {
-	FileName               string
-	Kind                   string
-	APIVersion             string
-	ValidatedAgainstSchema bool
-	Errors                 []gojsonschema.ResultError
+       FileName               string
+       Kind                   string
+       APIVersion             string
+       ValidatedAgainstSchema bool
+       Errors                 []gojsonschema.ResultError
 }
 
 // VersionKind returns a string representation of this result's apiVersion and kind
@@ -138,13 +128,6 @@ func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaC
 	if err != nil {
 		return handleMissingSchema(err, config)
 	}
-
-	// Without forcing these types the schema fails to load
-	// Need to Work out proper handling for these types
-	gojsonschema.FormatCheckers.Add("int64", ValidFormat{})
-	gojsonschema.FormatCheckers.Add("byte", ValidFormat{})
-	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
-	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
 
 	documentLoader := gojsonschema.NewGoLoader(body)
 	results, err := schema.Validate(documentLoader)
