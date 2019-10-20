@@ -169,3 +169,11 @@
   [ "$status" -eq 0 ]
   [ "$output" = "PASS - fixtures/valid.yaml contains a valid ReplicationController" ]
 }
+
+@test "Adjusts help string when invoked as a kubectl plugin" {
+  ln -s kubeval bin/kubectl-kubeval
+
+  run bin/kubectl-kubeval --help
+  [ "$status" -eq 0 ]
+  [[ ${lines[2]} == "  kubectl kubeval <file>"* ]]
+}
