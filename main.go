@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -43,6 +45,17 @@ var RootCmd = &cobra.Command{
 		if config.IgnoreMissingSchemas && !config.Quiet {
 			log.Warn("Set to ignore missing schemas")
 		}
+
+		// This is not particularly secure but we highlight that with the name of
+		// the config item. It would be good to also support a configurable set of
+		// trusted certificate authorities as in the `--certificate-authority`
+		// kubectl option.
+		if config.InsecureSkipTLSVerify {
+			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
+				InsecureSkipVerify: true,
+			}
+		}
+
 		success := true
 		windowsStdinIssue := false
 		outputManager := kubeval.GetOutputManager(config.OutputFormat)
