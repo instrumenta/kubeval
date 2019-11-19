@@ -188,7 +188,7 @@ func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonsc
 			return schema, nil
 		}
 		// We couldn't find a schema for this URL, so take a note, then try the next URL
-		wrappedErr := fmt.Errorf("Failed initalizing schema %s: %s", schemaRef, err)
+		wrappedErr := fmt.Errorf("Failed initializing schema %s: %s", schemaRef, err)
 		errors = multierror.Append(errors, wrappedErr)
 	}
 
