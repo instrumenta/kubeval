@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/xeipuuv/gojsonschema"
@@ -15,6 +16,8 @@ import (
 // ValidFormat is a type for quickly forcing
 // new formats on the gojsonschema loader
 type ValidFormat struct{}
+
+var cacheMu sync.Mutex
 
 // IsFormat always returns true and meets the
 // gojsonschema.FormatChecker interface
@@ -99,7 +102,6 @@ func determineSchemaBaseURL(config *Config) string {
 // the relevant schema, detecting the type of resource automatically
 func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, config *Config) (ValidationResult, error) {
 	result := ValidationResult{}
-	result.FileName = config.FileName
 	var body map[string]interface{}
 	err := yaml.Unmarshal(data, &body)
 	if err != nil {
@@ -133,18 +135,25 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 }
 
 func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema, config *Config) ([]gojsonschema.ResultError, error) {
+	var schema *gojsonschema.Schema
+	var err error
+	var ok bool
 
-	schema, err := downloadSchema(resource, schemaCache, config)
-	if err != nil {
-		return handleMissingSchema(err, config)
+	cacheMu.Lock()
+	schema, ok = schemaCache[resource.VersionKind()]
+	cacheMu.Unlock()
+	if !ok {
+		schema, err = downloadSchema(resource, config)
+		if err != nil {
+			return handleMissingSchema(err, config)
+		}
+		cacheMu.Lock()
+		schemaCache[resource.VersionKind()] = schema
+		cacheMu.Unlock()
 	}
 
 	// Without forcing these types the schema fails to load
 	// Need to Work out proper handling for these types
-	gojsonschema.FormatCheckers.Add("int64", ValidFormat{})
-	gojsonschema.FormatCheckers.Add("byte", ValidFormat{})
-	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
-	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
 
 	documentLoader := gojsonschema.NewGoLoader(body)
 	results, err := schema.Validate(documentLoader)
@@ -161,13 +170,7 @@ func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaC
 	return []gojsonschema.ResultError{}, nil
 }
 
-func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema, config *Config) (*gojsonschema.Schema, error) {
-	if schema, ok := schemaCache[resource.VersionKind()]; ok {
-		// If the schema was previously cached, there's no work to be done
-		return schema, nil
-	}
-
-	// We haven't cached this schema yet; look for one that works
+func downloadSchema(resource *ValidationResult, config *Config) (*gojsonschema.Schema, error) {
 	primarySchemaBaseURL := determineSchemaBaseURL(config)
 	primarySchemaRef := determineSchemaURL(primarySchemaBaseURL, resource.Kind, resource.APIVersion, config)
 	schemaRefs := []string{primarySchemaRef}
@@ -183,8 +186,7 @@ func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonsc
 		schemaLoader := gojsonschema.NewReferenceLoader(schemaRef)
 		schema, err := gojsonschema.NewSchema(schemaLoader)
 		if err == nil {
-			// success! cache this and stop looking
-			schemaCache[resource.VersionKind()] = schema
+			// success!
 			return schema, nil
 		}
 		// We couldn't find a schema for this URL, so take a note, then try the next URL
@@ -236,7 +238,6 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 
 	if len(input) == 0 {
 		result := ValidationResult{}
-		result.FileName = config.FileName
 		results = append(results, result)
 		return results, nil
 	}
@@ -250,18 +251,10 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 
 	// Save the fileName we were provided; if we detect a new fileName
 	// we'll use that, but we'll need to revert to the default afterward
-	originalFileName := config.FileName
-	defer func() {
-		// revert the filename back to the original
-		config.FileName = originalFileName
-	}()
 
+	filename := ""
 	for _, element := range bits {
 		if len(element) > 0 {
-			if found := helmSourcePattern.FindStringSubmatch(string(element)); found != nil {
-				config.FileName = found[1]
-			}
-
 			result, err := validateResource(element, schemaCache, config)
 			if err != nil {
 				errors = multierror.Append(errors, err)
@@ -269,11 +262,13 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 					return results, errors
 				}
 			}
+			if found := helmSourcePattern.FindStringSubmatch(string(element)); found != nil {
+				filename = found[1]
+			}
+			result.FileName = filename
 			results = append(results, result)
 		} else {
-			result := ValidationResult{}
-			result.FileName = config.FileName
-			results = append(results, result)
+			results = append(results, ValidationResult{FileName: filename})
 		}
 	}
 

@@ -5,11 +5,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/xeipuuv/gojsonschema"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/fatih/color"
 	multierror "github.com/hashicorp/go-multierror"
@@ -72,11 +74,13 @@ var RootCmd = &cobra.Command{
 				buffer.WriteString(scanner.Text() + "\n")
 			}
 			schemaCache := kubeval.NewSchemaCache()
-			config.FileName = viper.GetString("filename")
 			results, err := kubeval.ValidateWithCache(buffer.Bytes(), schemaCache, config)
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
+			}
+			for i, _ := range results {
+				results[i].FileName = viper.GetString("filename")
 			}
 			success = !hasErrors(results)
 
@@ -92,45 +96,55 @@ var RootCmd = &cobra.Command{
 				log.Error(errors.New("You must pass at least one file as an argument, or at least one directory to the directories flag"))
 				os.Exit(1)
 			}
+			nWorkers := 8
+
+			filesQueue := make(chan []string)
+			results := make(chan []kubeval.ValidationResult)
+			var workersWG sync.WaitGroup
 			schemaCache := kubeval.NewSchemaCache()
-			files, err := aggregateFiles(args)
-			if err != nil {
+			for i := 0; i <= nWorkers; i++ {
+				workersWG.Add(1)
+				go func() {
+					for pathsBatch := range filesQueue {
+						res, err := validateFiles(pathsBatch, schemaCache, config)
+						if err != nil {
+							success = false
+						}
+						results <- res
+					}
+					workersWG.Done()
+				}()
+			}
+
+			var resultsWG sync.WaitGroup
+			resultsWG.Add(1)
+			go func() {
+				for resultBatch := range results {
+					for _, result := range resultBatch {
+						err := outputManager.Put(result)
+						if err != nil {
+							log.Error(err)
+							os.Exit(1)
+						}
+					}
+
+					// only use result of hasErrors check if `success` is currently truthy
+					success = success && !hasErrors(resultBatch)
+				}
+				resultsWG.Done()
+			}()
+
+			batchSize := 50
+			if err := aggregateFiles(args, filesQueue, batchSize); err != nil {
 				log.Error(err)
 				success = false
 			}
 
-			var aggResults []kubeval.ValidationResult
-			for _, fileName := range files {
-				filePath, _ := filepath.Abs(fileName)
-				fileContents, err := ioutil.ReadFile(filePath)
-				if err != nil {
-					log.Error(fmt.Errorf("Could not open file %v", fileName))
-					earlyExit()
-					success = false
-					continue
-				}
-				config.FileName = fileName
-				results, err := kubeval.ValidateWithCache(fileContents, schemaCache, config)
-				if err != nil {
-					log.Error(err)
-					earlyExit()
-					success = false
-					continue
-				}
+			close(filesQueue)
+			workersWG.Wait()
+			close(results)
+			resultsWG.Wait()
 
-				for _, r := range results {
-					err := outputManager.Put(r)
-					if err != nil {
-						log.Error(err)
-						os.Exit(1)
-					}
-				}
-
-				aggResults = append(aggResults, results...)
-			}
-
-			// only use result of hasErrors check if `success` is currently truthy
-			success = success && !hasErrors(aggResults)
 		}
 
 		// flush any final logs which may be sitting in the buffer
@@ -146,6 +160,44 @@ var RootCmd = &cobra.Command{
 	},
 }
 
+func validateFiles(filePaths []string, schemaCache map[string]*gojsonschema.Schema, config *kubeval.Config) ([]kubeval.ValidationResult, error) {
+	aggResults := []kubeval.ValidationResult{}
+	success := true
+
+	for _, filePath := range filePaths {
+		absFilePath, _ := filepath.Abs(filePath)
+		fileContents, err := ioutil.ReadFile(absFilePath)
+		if err != nil {
+			log.Error(fmt.Errorf("Could not open file %v", filePath))
+			success = false
+			earlyExit()
+			continue
+		}
+
+		results, err := kubeval.ValidateWithCache(fileContents, schemaCache, config)
+		if err != nil {
+			log.Error(err)
+			success = false
+			earlyExit()
+			continue
+		}
+		for i, _ := range results {
+			// The filename is set for helm charts, otherwise empty string
+			if results[i].FileName == "" {
+				results[i].FileName = filePath
+			}
+		}
+
+		aggResults = append(aggResults, results...)
+	}
+
+	if success == false {
+		return aggResults, fmt.Errorf("at least one error occured")
+	}
+
+	return aggResults, nil
+}
+
 // hasErrors returns truthy if any of the provided results
 // contain errors.
 func hasErrors(res []kubeval.ValidationResult) bool {
@@ -157,7 +209,7 @@ func hasErrors(res []kubeval.ValidationResult) bool {
 	return false
 }
 
-func aggregateFiles(args []string) ([]string, error) {
+func aggregateFiles(args []string, fileBatches chan<- []string, batchSize int) error {
 	files := make([]string, len(args))
 	copy(files, args)
 
@@ -169,6 +221,10 @@ func aggregateFiles(args []string) ([]string, error) {
 			}
 			if !info.IsDir() && (strings.HasSuffix(info.Name(), ".yaml") || strings.HasSuffix(info.Name(), ".yml")) {
 				files = append(files, path)
+				if len(files) > batchSize {
+					fileBatches <- files
+					files = nil
+				}
 			}
 			return nil
 		})
@@ -177,7 +233,11 @@ func aggregateFiles(args []string) ([]string, error) {
 		}
 	}
 
-	return files, allErrors.ErrorOrNil()
+	if len(files) > 0 {
+		fileBatches <- files
+	}
+
+	return allErrors.ErrorOrNil()
 }
 
 func earlyExit() {
