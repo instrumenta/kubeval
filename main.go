@@ -5,11 +5,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/xeipuuv/gojsonschema"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/fatih/color"
 	multierror "github.com/hashicorp/go-multierror"
@@ -32,6 +34,33 @@ var (
 
 	config = kubeval.NewDefaultConfig()
 )
+
+
+func validateFiles(filePaths []string, schemaCache map[string]*gojsonschema.Schema, config *kubeval.Config) ([]kubeval.ValidationResult, error){
+	aggResults := []kubeval.ValidationResult{}
+
+	for _, filePath := range filePaths {
+		absFilePath, _ := filepath.Abs(filePath)
+		fileContents, err := ioutil.ReadFile(absFilePath)
+		if err != nil {
+			log.Error(fmt.Errorf("Could not open file %v", filePath))
+			earlyExit()
+			continue
+		}
+
+		config.FileName = filePath
+		results, err := kubeval.ValidateWithCache(fileContents, schemaCache, config)
+		if err != nil {
+			log.Error(err)
+			earlyExit()
+			continue
+		}
+
+		aggResults = append(aggResults, results...)
+	}
+
+	return aggResults, nil
+}
 
 // RootCmd represents the the command to run when kubeval is run
 var RootCmd = &cobra.Command{
@@ -93,44 +122,46 @@ var RootCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			schemaCache := kubeval.NewSchemaCache()
-			files, err := aggregateFiles(args)
+			nWorkers := 4
+
+			filesQueue := make(chan[]string)
+			results := make(chan[]kubeval.ValidationResult)
+			var wg sync.WaitGroup
+			for i:=0; i<=nWorkers; i++ {
+				wg.Add(1)
+				go func() {
+					for pathsBatch := range filesQueue {
+						res, _ := validateFiles(pathsBatch, schemaCache, config)
+						results <- res
+					}
+					wg.Done()
+				}()
+			}
+
+			go func() {
+				for resultBatch := range results {
+					for _, result := range resultBatch {
+						err := outputManager.Put(result)
+						if err != nil {
+							log.Error(err)
+							os.Exit(1)
+						}
+					}
+
+					// only use result of hasErrors check if `success` is currently truthy
+					success = !hasErrors(resultBatch)
+				}
+			}()
+
+			err := aggregateFiles(args, filesQueue, 100)
 			if err != nil {
 				log.Error(err)
 				success = false
 			}
 
-			var aggResults []kubeval.ValidationResult
-			for _, fileName := range files {
-				filePath, _ := filepath.Abs(fileName)
-				fileContents, err := ioutil.ReadFile(filePath)
-				if err != nil {
-					log.Error(fmt.Errorf("Could not open file %v", fileName))
-					earlyExit()
-					success = false
-					continue
-				}
-				config.FileName = fileName
-				results, err := kubeval.ValidateWithCache(fileContents, schemaCache, config)
-				if err != nil {
-					log.Error(err)
-					earlyExit()
-					success = false
-					continue
-				}
-
-				for _, r := range results {
-					err := outputManager.Put(r)
-					if err != nil {
-						log.Error(err)
-						os.Exit(1)
-					}
-				}
-
-				aggResults = append(aggResults, results...)
-			}
-
-			// only use result of hasErrors check if `success` is currently truthy
-			success = success && !hasErrors(aggResults)
+			close(filesQueue)
+			wg.Wait()
+			close(results)
 		}
 
 		// flush any final logs which may be sitting in the buffer
@@ -157,8 +188,8 @@ func hasErrors(res []kubeval.ValidationResult) bool {
 	return false
 }
 
-func aggregateFiles(args []string) ([]string, error) {
-	files := make([]string, len(args))
+func aggregateFiles(args []string, fileBatches chan<-[]string, batchSize int) error {
+	files := []string{}
 	copy(files, args)
 
 	var allErrors *multierror.Error
@@ -169,6 +200,11 @@ func aggregateFiles(args []string) ([]string, error) {
 			}
 			if !info.IsDir() && (strings.HasSuffix(info.Name(), ".yaml") || strings.HasSuffix(info.Name(), ".yml")) {
 				files = append(files, path)
+				fmt.Printf("%d\n", len(files))
+				if len(files) > batchSize {
+					fileBatches <-files
+					files = nil
+				}
 			}
 			return nil
 		})
@@ -177,7 +213,7 @@ func aggregateFiles(args []string) ([]string, error) {
 		}
 	}
 
-	return files, allErrors.ErrorOrNil()
+	return allErrors.ErrorOrNil()
 }
 
 func earlyExit() {
