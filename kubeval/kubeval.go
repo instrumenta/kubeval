@@ -153,12 +153,16 @@ func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaC
 	cacheMu.Unlock()
 	if !ok {
 		schema, err = downloadSchema(resource, config)
-		if err != nil {
-			return handleMissingSchema(err, config)
+		// We cache schemas that are not found in the main registry
+		if err == nil || strings.Contains(err.Error(), "404") {
+			cacheMu.Lock()
+			schemaCache[resource.VersionKind()] = schema
+			cacheMu.Unlock()
 		}
-		cacheMu.Lock()
-		schemaCache[resource.VersionKind()] = schema
-		cacheMu.Unlock()
+	}
+
+	if schema == nil {
+		return handleMissingSchema(err, config)
 	}
 
 	// Without forcing these types the schema fails to load
