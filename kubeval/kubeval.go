@@ -40,6 +40,15 @@ func (v *ValidationResult) VersionKind() string {
 	return v.APIVersion + "/" + v.Kind
 }
 
+func SetupFormatCheckers() {
+	// Without forcing these types the schema fails to load
+	// Need to Work out proper handling for these types
+	gojsonschema.FormatCheckers.Add("int64", ValidFormat{})
+	gojsonschema.FormatCheckers.Add("byte", ValidFormat{})
+	gojsonschema.FormatCheckers.Add("int32", ValidFormat{})
+	gojsonschema.FormatCheckers.Add("int-or-string", ValidFormat{})
+}
+
 func determineSchemaURL(baseURL, kind, apiVersion string, config *Config) string {
 	// We have both the upstream Kubernetes schemas and the OpenShift schemas available
 	// the tool can toggle between then using the config.OpenShift boolean flag and here we

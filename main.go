@@ -65,6 +65,7 @@ var RootCmd = &cobra.Command{
 		if forceColor {
 			color.NoColor = false
 		}
+
 		// We detect whether we have anything on stdin to process if we have no arguments
 		// or if the argument is a -
 		if (len(args) < 1 || args[0] == "-") && !windowsStdinIssue && ((stat.Mode() & os.ModeCharDevice) == 0) {
