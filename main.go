@@ -65,7 +65,9 @@ var RootCmd = &cobra.Command{
 		}
 		// We detect whether we have anything on stdin to process if we have no arguments
 		// or if the argument is a -
-		if (len(args) < 1 || args[0] == "-") && !windowsStdinIssue && ((stat.Mode() & os.ModeCharDevice) == 0) {
+		notty := (stat.Mode() & os.ModeCharDevice) == 0
+		noFileOrDirArgs := (len(args) < 1 || args[0] == "-") && len(directories) < 1
+		if noFileOrDirArgs && !windowsStdinIssue && notty {
 			var buffer bytes.Buffer
 			scanner := bufio.NewScanner(os.Stdin)
 			for scanner.Scan() {
