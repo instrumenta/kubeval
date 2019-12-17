@@ -7,7 +7,7 @@ At the most basic level, Kubeval is used like so:
 
 ```console
 $ kubeval my-invalid-rc.yaml
-WANR - my-invalid-rc.yaml contains an invalid ReplicationController - spec.replicas: Invalid type. Expected: integer, given: string
+WARN - my-invalid-rc.yaml contains an invalid ReplicationController - spec.replicas: Invalid type. Expected: integer, given: string
 $ echo $?
 1
 ```
