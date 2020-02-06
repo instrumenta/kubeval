@@ -196,9 +196,8 @@ func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonsc
 		errors.ErrorFormat = singleLineErrorFormat
 	}
 
-	// TODO: this currently triggers a segfault in offline cases
-	// We couldn't find a schema for this resource. Cache it's lack of existence, then stop
-	//schemaCache[resource.VersionKind()] = nil
+	// We couldn't find a schema for this resource. Cache its lack of existence
+	schemaCache[resource.VersionKind()] = nil
 	return nil, errors.ErrorOrNil()
 }
 
