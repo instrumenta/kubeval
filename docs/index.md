@@ -70,7 +70,7 @@ If you would prefer to be more explicit about which custom resources to skip you
 provide a list of resources to skip like so.
 
 ```console
-$ kubeval --skip-kinds SealedSecret fixtures/test_crd.yam
+$ kubeval --skip-kinds SealedSecret fixtures/test_crd.yaml
 WARN - fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
 ```
 
@@ -80,7 +80,7 @@ Helm chart configurations generally have a reference to the source template in a
 like so:
 
 ```console
-# Source: chart/templates/frontend.yam
+# Source: chart/templates/frontend.yaml
 ```
 
 When kubeval detects these comments it will report the relevant chart template files in
