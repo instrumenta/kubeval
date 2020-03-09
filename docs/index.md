@@ -155,6 +155,7 @@ Flags:
       --openshift                   Use OpenShift schemas instead of upstream Kubernetes
   -o, --output string               The format of the output of this script. Options are: [stdout json]
       --schema-location string      Base URL used to download schemas. Can also be specified with the environment variable KUBEVAL_SCHEMA_LOCATION
+      --crd-schema-location string  Base URL used to download CRD schemas.
       --skip-kinds strings          Comma-separated list of case-sensitive kinds to skip when validating against schemas
       --strict                      Disallow additional properties not in schema
       --version                     version for kubeval

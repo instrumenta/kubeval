@@ -177,6 +177,10 @@ func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonsc
 		schemaRefs = append(schemaRefs, additionalSchemaRef)
 	}
 
+	for _, crdURL := range config.CRDSchemaLocations {
+		schemaRefs = append(schemaRefs, crdURL)
+	}
+
 	var errors *multierror.Error
 
 	for _, schemaRef := range schemaRefs {
