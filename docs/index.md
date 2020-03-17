@@ -80,7 +80,7 @@ Helm chart configurations generally have a reference to the source template in a
 like so:
 
 ```console
-# Source: chart/templates/frontend.yam
+# Source: chart/templates/frontend.yaml
 ```
 
 When kubeval detects these comments it will report the relevant chart template files in
