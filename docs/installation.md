@@ -36,7 +36,7 @@ Windows users can download the `zip` files from the releases page. For [Scoop](h
 users you can install with:
 
 ```
-scoop bucket add instrumenta https://github.com/instrumenta/bucket-instrumenta
+scoop bucket add instrumenta https://github.com/instrumenta/scoop-instrumenta
 scoop install kubeval
 ```
 
