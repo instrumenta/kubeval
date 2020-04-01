@@ -4,7 +4,34 @@ import (
 	"bytes"
 	"fmt"
 	"runtime"
+	"strings"
 )
+
+func getStringAt(body map[string]interface{}, path []string) (string, error) {
+	obj := body
+	visited := []string{}
+	var last interface{} = body
+	for _, key := range path {
+		visited = append(visited, key)
+
+		typed, ok := last.(map[string]interface{})
+		if !ok {
+			return "", fmt.Errorf("Expected object at key '%s'", strings.Join(visited, "."))
+		}
+		obj = typed
+
+		value, found := obj[key]
+		if !found {
+			return "", fmt.Errorf("Missing '%s' key", strings.Join(visited, "."))
+		}
+		last = value
+	}
+	typed, ok := last.(string)
+	if !ok {
+		return "", fmt.Errorf("Expected string value for key '%s'", strings.Join(visited, "."))
+	}
+	return typed, nil
+}
 
 func getString(body map[string]interface{}, key string) (string, error) {
 	value, found := body[key]
