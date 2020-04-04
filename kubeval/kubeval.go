@@ -124,6 +124,10 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 		return result, nil
 	}
 
+	if in(config.KindsToReject, kind) {
+		return result, fmt.Errorf("Prohibited resourse kind '%s' in %s", kind, result.FileName)
+	}
+
 	schemaErrors, err := validateAgainstSchema(body, &result, schemaCache, config)
 	if err != nil {
 		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())

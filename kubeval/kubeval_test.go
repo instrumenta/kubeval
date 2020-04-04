@@ -192,6 +192,41 @@ func TestValidateMultipleResourcesWithErrors(t *testing.T) {
 	}
 }
 
+func TestValidateKindsToReject(t *testing.T) {
+	var tests = []struct {
+		Name          string
+		KindsToReject []string
+		Fixture       string
+		Pass          bool
+	}{
+		{
+			Name:          "allow_all",
+			KindsToReject: []string{},
+			Fixture:       "valid.yaml",
+			Pass:          true,
+		},
+		{
+			Name:          "reject_one",
+			KindsToReject: []string{"ReplicationController"},
+			Fixture:       "valid.yaml",
+			Pass:          false,
+		},
+	}
+	schemaCache := make(map[string]*gojsonschema.Schema, 0)
+
+	for _, test := range tests {
+		filePath, _ := filepath.Abs("../fixtures/" + test.Fixture)
+		fileContents, _ := ioutil.ReadFile(filePath)
+		config := NewDefaultConfig()
+		config.FileName = test.Fixture
+		config.KindsToReject = test.KindsToReject
+		_, err := ValidateWithCache(fileContents, schemaCache, config)
+		if err != nil && test.Pass == true {
+			t.Errorf("Validate should pass when testing valid configuration in " + test.Name)
+		}
+	}
+}
+
 func TestDetermineSchemaURL(t *testing.T) {
 	var tests = []struct {
 		config   *Config
