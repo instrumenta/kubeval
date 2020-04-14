@@ -30,11 +30,24 @@ type ValidationResult struct {
 	APIVersion             string
 	ValidatedAgainstSchema bool
 	Errors                 []gojsonschema.ResultError
+	ResourceName           string
+	ResourceNamespace      string
 }
 
 // VersionKind returns a string representation of this result's apiVersion and kind
 func (v *ValidationResult) VersionKind() string {
 	return v.APIVersion + "/" + v.Kind
+}
+
+// QualifiedName returns a string of the [namespace.]name of the k8s resource
+func (v *ValidationResult) QualifiedName() string {
+	if v.ResourceName == "" {
+		return "unknown"
+	} else if v.ResourceNamespace == "" {
+		return v.ResourceName
+	} else {
+		return fmt.Sprintf("%s.%s", v.ResourceNamespace, v.ResourceName)
+	}
 }
 
 func determineSchemaURL(baseURL, kind, apiVersion string, config *Config) string {
@@ -107,6 +120,18 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 	} else if body == nil {
 		return result, nil
 	}
+
+	name, err := getStringAt(body, []string{"metadata", "name"})
+	if err != nil {
+		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())
+	}
+	result.ResourceName = name
+
+	namespace, err := getStringAt(body, []string{"metadata", "namespace"})
+	if err != nil {
+		result.ResourceNamespace = "default"
+	}
+	result.ResourceNamespace = namespace
 
 	kind, err := getString(body, "kind")
 	if err != nil {
