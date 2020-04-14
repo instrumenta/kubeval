@@ -135,7 +135,7 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema, config *Config) ([]gojsonschema.ResultError, error) {
 
 	schema, err := downloadSchema(resource, schemaCache, config)
-	if err != nil {
+	if err != nil || schema == nil {
 		return handleMissingSchema(err, config)
 	}
 
@@ -161,6 +161,7 @@ func validateAgainstSchema(body interface{}, resource *ValidationResult, schemaC
 	return []gojsonschema.ResultError{}, nil
 }
 
+// returned schema may be nil scehma is missing and missing schemas are allowed
 func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonschema.Schema, config *Config) (*gojsonschema.Schema, error) {
 	if schema, ok := schemaCache[resource.VersionKind()]; ok {
 		// If the schema was previously cached, there's no work to be done
@@ -196,9 +197,8 @@ func downloadSchema(resource *ValidationResult, schemaCache map[string]*gojsonsc
 		errors.ErrorFormat = singleLineErrorFormat
 	}
 
-	// TODO: this currently triggers a segfault in offline cases
-	// We couldn't find a schema for this resource. Cache it's lack of existence, then stop
-	//schemaCache[resource.VersionKind()] = nil
+	// We couldn't find a schema for this resource. Cache its lack of existence
+	schemaCache[resource.VersionKind()] = nil
 	return nil, errors.ErrorOrNil()
 }
 
