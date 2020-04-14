@@ -3,49 +3,49 @@
 @test "Pass when parsing a valid Kubernetes config YAML file" {
   run bin/kubeval fixtures/valid.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - fixtures/valid.yaml contains a valid ReplicationController" ]
+  [ "$output" = "PASS - fixtures/valid.yaml contains a valid ReplicationController (bob)" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config YAML file on stdin" {
   run bash -c "cat fixtures/valid.yaml | bin/kubeval"
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - stdin contains a valid ReplicationController" ]
+  [ "$output" = "PASS - stdin contains a valid ReplicationController (bob)" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config YAML file explicitly on stdin" {
   run bash -c "cat fixtures/valid.yaml | bin/kubeval -"
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - stdin contains a valid ReplicationController" ]
+  [ "$output" = "PASS - stdin contains a valid ReplicationController (bob)" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config JSON file" {
   run bin/kubeval fixtures/valid.json
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - fixtures/valid.json contains a valid Deployment" ]
+  [ "$output" = "PASS - fixtures/valid.json contains a valid Deployment (default.nginx-deployment)" ]
 }
 
 @test "Pass when parsing a Kubernetes file with string and integer quantities" {
   run bin/kubeval fixtures/quantity.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - fixtures/quantity.yaml contains a valid LimitRange" ]
+  [ "$output" = "PASS - fixtures/quantity.yaml contains a valid LimitRange (mem-limit-range)" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config file with int_to_string vars" {
   run bin/kubeval fixtures/int_or_string.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - fixtures/int_or_string.yaml contains a valid Service" ]
+  [ "$output" = "PASS - fixtures/int_or_string.yaml contains a valid Service (kube-system.heapster)" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config file with null arrays" {
   run bin/kubeval fixtures/null_array.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - fixtures/null_array.yaml contains a valid Deployment" ]
+  [ "$output" = "PASS - fixtures/null_array.yaml contains a valid Deployment (kube-system.kubernetes-dashboard)" ]
 }
 
 @test "Pass when parsing a valid Kubernetes config file with null strings" {
   run bin/kubeval fixtures/null_string.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - fixtures/null_string.yaml contains a valid Service" ]
+  [ "$output" = "PASS - fixtures/null_string.yaml contains a valid Service (frontend)" ]
 }
 
 @test "Pass when parsing a multi-document config file" {
@@ -167,11 +167,11 @@
 @test "Does not print warnings if --quiet is supplied" {
   run bin/kubeval --ignore-missing-schemas --quiet fixtures/valid.yaml
   [ "$status" -eq 0 ]
-  [ "$output" = "PASS - fixtures/valid.yaml contains a valid ReplicationController" ]
+  [ "$output" = "PASS - fixtures/valid.yaml contains a valid ReplicationController (bob)" ]
 }
 
 @test "Adjusts help string when invoked as a kubectl plugin" {
-  ln -s kubeval bin/kubectl-kubeval
+  ln -sf kubeval bin/kubectl-kubeval
 
   run bin/kubectl-kubeval --help
   [ "$status" -eq 0 ]
