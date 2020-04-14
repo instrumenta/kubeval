@@ -3,8 +3,8 @@ $ErrorActionPreference = 'Stop'
 
 $packageName= $env:ChocolateyPackageName
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$url        = "https://github.com/garethr/kubeval/releases/download/$($env:ChocolateyPackageVersion)/kubeval-windows-386.zip"
-$url64      = "https://github.com/garethr/kubeval/releases/download/$($env:ChocolateyPackageVersion)/kubeval-windows-amd64.zip"
+$url        = "https://github.com/instrumenta/kubeval/releases/download/$($env:ChocolateyPackageVersion)/kubeval-windows-386.zip"
+$url64      = "https://github.com/instrumenta/kubeval/releases/download/$($env:ChocolateyPackageVersion)/kubeval-windows-amd64.zip"
 
 $packageArgs = @{
   packageName   = $packageName
@@ -12,9 +12,9 @@ $packageArgs = @{
   url           = $url
   url64bit      = $url64
 
-  checksum      = '1EB9F826E6E607B07E38C79AFFF425392016953368158D6B33817311D44F14EF'
+  checksum      = '5DED35273DD35993C0FC52A08D9CC268487620736C4782077BC72723CC7224D0'
   checksumType  = 'sha256'
-  checksum64    = '4C7085BA0366F961FC2664DED0F09AE61FB54F393717A73AAC8601987D7BDA31' 
+  checksum64    = '2A844518981848A7D77CCED9B51A05174BA9C17FC007A1C48CD2AF0D3FB021D7'
   checksumType64= 'sha256'
 }
 
