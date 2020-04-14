@@ -8,8 +8,8 @@ builds:
   - windows
   - linux
   - darwin 
-archive:
-  format: tar.gz
+archives:
+- format: tar.gz
   format_overrides:
   - goos: windows
     format: zip
@@ -24,8 +24,8 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
-brew:
-  github:
+brews:
+- github:
     owner: instrumenta
     name: homebrew-instrumenta
   folder: Formula
