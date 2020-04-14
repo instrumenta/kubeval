@@ -241,7 +241,25 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 		return results, nil
 	}
 
-	bits := bytes.Split(input, []byte(detectLineBreak(input)+"---"+detectLineBreak(input)))
+	list := struct {
+		Version string
+		Kind    string
+		Items   []interface{}
+	}{}
+
+	unmarshalErr := yaml.Unmarshal(input, &list)
+	isYamlList := unmarshalErr == nil && list.Items != nil && len(list.Items) > 0
+
+	var bits [][]byte
+	if isYamlList {
+		bits = make([][]byte, len(list.Items))
+		for i, item := range list.Items {
+			b, _ := yaml.Marshal(item)
+			bits[i] = b
+		}
+	} else {
+		bits = bytes.Split(input, []byte(detectLineBreak(input)+"---"+detectLineBreak(input)))
+	}
 
 	var errors *multierror.Error
 

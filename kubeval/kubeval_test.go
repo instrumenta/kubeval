@@ -34,6 +34,7 @@ func TestValidateValidInputs(t *testing.T) {
 		"extra_property.yaml",
 		"full_domain_group.yaml",
 		"unconventional_keys.yaml",
+		"list_valid.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
@@ -60,6 +61,7 @@ func TestValidateValidInputsWithCache(t *testing.T) {
 		"extra_property.yaml",
 		"full_domain_group.yaml",
 		"unconventional_keys.yaml",
+		"list_valid.yaml",
 	}
 	schemaCache := make(map[string]*gojsonschema.Schema, 0)
 
@@ -147,6 +149,7 @@ func TestValidateInputsWithErrors(t *testing.T) {
 	var tests = []string{
 		"invalid.yaml",
 		"multi_invalid.yaml",
+		"list_invalid.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
@@ -154,7 +157,11 @@ func TestValidateInputsWithErrors(t *testing.T) {
 		config := NewDefaultConfig()
 		config.FileName = test
 		results, _ := Validate(fileContents, config)
-		if len(results[0].Errors) == 0 {
+		errorCount := 0
+		for _, result := range results {
+			errorCount += len(result.Errors)
+		}
+		if errorCount == 0 {
 			t.Errorf("Validate should not pass when testing invalid configuration in " + test)
 		}
 	}
