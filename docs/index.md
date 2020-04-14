@@ -70,7 +70,7 @@ If you would prefer to be more explicit about which custom resources to skip you
 provide a list of resources to skip like so.
 
 ```console
-$ kubeval --skip-kinds SealedSecret fixtures/test_crd.yam
+$ kubeval --skip-kinds SealedSecret fixtures/test_crd.yaml
 WARN - fixtures/test_crd.yaml containing a SealedSecret was not validated against a schema
 ```
 
