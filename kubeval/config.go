@@ -57,6 +57,10 @@ type Config struct {
 	// Quiet indicates whether non-results output should be emitted to the applications
 	// log.
 	Quiet bool
+
+	// InsecureSkipTLSVerify controls whether to skip TLS certificate validation
+	// when retrieving schema content over HTTPS
+	InsecureSkipTLSVerify bool
 }
 
 // NewDefaultConfig creates a Config with default values
@@ -80,6 +84,7 @@ func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
 	cmd.Flags().StringVarP(&config.KubernetesVersion, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
 	cmd.Flags().StringVarP(&config.OutputFormat, "output", "o", "", fmt.Sprintf("The format of the output of this script. Options are: %v", validOutputs()))
 	cmd.Flags().BoolVar(&config.Quiet, "quiet", false, "Silences any output aside from the direct results")
+	cmd.Flags().BoolVar(&config.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 
 	return cmd
 }
