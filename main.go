@@ -35,7 +35,6 @@ var (
 
 // RootCmd represents the the command to run when kubeval is run
 var RootCmd = &cobra.Command{
-	Use:     "kubeval <file> [file...]",
 	Short:   "Validate a Kubernetes YAML file against the relevant schema",
 	Long:    `Validate a Kubernetes YAML file against the relevant schema`,
 	Version: fmt.Sprintf("Version: %s\nCommit: %s\nDate: %s\n", version, commit, date),
@@ -196,6 +195,11 @@ func Execute() {
 }
 
 func init() {
+	rootCmdName := filepath.Base(os.Args[0])
+	if strings.HasPrefix(rootCmdName, "kubectl-") {
+		rootCmdName = strings.Replace(rootCmdName, "-", " ", 1)
+	}
+	RootCmd.Use = fmt.Sprintf("%s <file> [file...]", rootCmdName)
 	kubeval.AddKubevalFlags(RootCmd, config)
 	RootCmd.Flags().BoolVarP(&forceColor, "force-color", "", false, "Force colored output even if stdout is not a TTY")
 	RootCmd.SetVersionTemplate(`{{.Version}}`)
