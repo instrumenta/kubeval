@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -21,10 +22,11 @@ import (
 )
 
 var (
-	version     = "dev"
-	commit      = "none"
-	date        = "unknown"
-	directories = []string{}
+	version                 = "dev"
+	commit                  = "none"
+	date                    = "unknown"
+	directories             = []string{}
+	ignoredFilenamePatterns = []string{}
 
 	// forceColor tells kubeval to use colored output even if
 	// stdout is not a TTY
@@ -156,6 +158,20 @@ func hasErrors(res []kubeval.ValidationResult) bool {
 	return false
 }
 
+// isIgnored returns whether the specified filename should be ignored.
+func isIgnored(filename string) (bool, error) {
+	for _, p := range ignoredFilenamePatterns {
+		m, err := regexp.MatchString(p, filename)
+		if err != nil {
+			return false, err
+		}
+		if m {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func aggregateFiles(args []string) ([]string, error) {
 	files := make([]string, len(args))
 	copy(files, args)
@@ -166,7 +182,11 @@ func aggregateFiles(args []string) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			if !info.IsDir() && (strings.HasSuffix(info.Name(), ".yaml") || strings.HasSuffix(info.Name(), ".yml")) {
+			ignored, err := isIgnored(info.Name())
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() && (strings.HasSuffix(info.Name(), ".yaml") || strings.HasSuffix(info.Name(), ".yml")) && !ignored {
 				files = append(files, path)
 			}
 			return nil
@@ -204,6 +224,7 @@ func init() {
 	RootCmd.Flags().BoolVarP(&forceColor, "force-color", "", false, "Force colored output even if stdout is not a TTY")
 	RootCmd.SetVersionTemplate(`{{.Version}}`)
 	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
+	RootCmd.Flags().StringSliceVarP(&ignoredFilenamePatterns, "ignored-filename-patterns", "i", []string{}, "A comma-separated list of regular expressions specifying filenames to ignore")
 
 	viper.SetEnvPrefix("KUBEVAL")
 	viper.AutomaticEnv()
