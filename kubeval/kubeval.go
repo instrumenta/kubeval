@@ -121,18 +121,6 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 		return result, nil
 	}
 
-	name, err := getStringAt(body, []string{"metadata", "name"})
-	if err != nil {
-		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())
-	}
-	result.ResourceName = name
-
-	namespace, err := getStringAt(body, []string{"metadata", "namespace"})
-	if err != nil {
-		result.ResourceNamespace = "default"
-	}
-	result.ResourceNamespace = namespace
-
 	kind, err := getString(body, "kind")
 	if err != nil {
 		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())
@@ -152,6 +140,18 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 	if in(config.KindsToReject, kind) {
 		return result, fmt.Errorf("Prohibited resourse kind '%s' in %s", kind, result.FileName)
 	}
+
+	name, err := getStringAt(body, []string{"metadata", "name"})
+	if err != nil {
+		return result, fmt.Errorf("%s: %s", result.FileName, err.Error())
+	}
+	result.ResourceName = name
+
+	namespace, err := getStringAt(body, []string{"metadata", "namespace"})
+	if err != nil {
+		result.ResourceNamespace = "default"
+	}
+	result.ResourceNamespace = namespace
 
 	schemaErrors, err := validateAgainstSchema(body, &result, schemaCache, config)
 	if err != nil {
