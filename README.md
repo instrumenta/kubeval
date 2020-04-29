@@ -18,4 +18,4 @@ $ echo $?
 ```
 
 
-For full usage and installation instructions see [kubeval.instrumenta.dev](https://kubeval.instrumenta.dev/).
+For full usage and installation instructions see [kubeval.com](https://kubeval.com/).
