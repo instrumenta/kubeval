@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -82,10 +82,11 @@ var RootCmd = &cobra.Command{
 		notty := (stat.Mode() & os.ModeCharDevice) == 0
 		noFileOrDirArgs := (len(args) < 1 || args[0] == "-") && len(directories) < 1
 		if noFileOrDirArgs && !windowsStdinIssue && notty {
-			var buffer bytes.Buffer
-			scanner := bufio.NewScanner(os.Stdin)
-			for scanner.Scan() {
-				buffer.WriteString(scanner.Text() + "\n")
+			buffer := new(bytes.Buffer)
+			_, err := io.Copy(buffer, os.Stdin)
+			if err != nil {
+				log.Error(err)
+				os.Exit(1)
 			}
 			schemaCache := kubeval.NewSchemaCache()
 			config.FileName = viper.GetString("filename")
