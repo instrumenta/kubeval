@@ -35,15 +35,21 @@ func TestValidateValidInputs(t *testing.T) {
 		"full_domain_group.yaml",
 		"unconventional_keys.yaml",
 		"list_valid.yaml",
+		"same-object-different-namespace.yaml",
+		"same-object-different-namespace-default.yaml",
+		"duplicates-skipped-kinds.yaml",
+		"same-kind-different-api.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
 		config := NewDefaultConfig()
+		config.DefaultNamespace = "the-default-namespace"
 		config.FileName = test
+		config.KindsToSkip = []string{"SkipThisKind"}
 		_, err := Validate(fileContents, config)
 		if err != nil {
-			t.Errorf("Validate should pass when testing valid configuration in " + test)
+			t.Errorf("Validate should pass when testing valid configuration in %s, got errors: %v", test, err)
 		}
 	}
 }
@@ -62,6 +68,9 @@ func TestValidateValidInputsWithCache(t *testing.T) {
 		"full_domain_group.yaml",
 		"unconventional_keys.yaml",
 		"list_valid.yaml",
+		"same-object-different-namespace.yaml",
+		"same-object-different-namespace-default.yaml",
+		"duplicates-skipped-kinds.yaml",
 	}
 	schemaCache := make(map[string]*gojsonschema.Schema, 0)
 
@@ -69,7 +78,9 @@ func TestValidateValidInputsWithCache(t *testing.T) {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
 		config := NewDefaultConfig()
+		config.DefaultNamespace = "the-default-namespace"
 		config.FileName = test
+		config.KindsToSkip = []string{"SkipThisKind"}
 		_, err := ValidateWithCache(fileContents, schemaCache, config)
 		if err != nil {
 			t.Errorf("Validate should pass when testing valid configuration in " + test)
@@ -81,11 +92,15 @@ func TestValidateInvalidInputs(t *testing.T) {
 	var tests = []string{
 		"missing_kind.yaml",
 		"missing_kind_value.yaml",
+		"duplicates.yaml",
+		"duplicates-non-namespaced.yaml",
+		"duplicates-with-namespace.yaml",
 	}
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
 		config := NewDefaultConfig()
+		config.DefaultNamespace = "the-default-namespace"
 		config.FileName = test
 		_, err := Validate(fileContents, config)
 		if err == nil {
