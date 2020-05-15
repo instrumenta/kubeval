@@ -241,7 +241,8 @@ func init() {
 	RootCmd.SetVersionTemplate(`{{.Version}}`)
 	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
 	RootCmd.Flags().StringSliceVarP(&ignoredPathPatterns, "ignored-path-patterns", "i", []string{}, "A comma-separated list of regular expressions specifying paths to ignore")
-
+	RootCmd.Flags().StringSliceVarP(&ignoredPathPatterns, "ignored-filename-patterns", "", []string{}, "An alias for ignored-path-patterns")
+	
 	viper.SetEnvPrefix("KUBEVAL")
 	viper.AutomaticEnv()
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
