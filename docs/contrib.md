@@ -10,7 +10,7 @@ Add the following to your Kubernetes configs repository in `.git/hooks/pre-commi
 This will validate all the `yaml` files in the top directory of the repository.
 
 ```shell
-#!/bin/sh
+#!/bin/sh -e
 
 echo "Running kubeval validations..."
 
@@ -20,11 +20,7 @@ if ! [ -x "$(command -v kubeval)" ]; then
 fi
 
 # Inspect code using kubeval
-find . -maxdepth 1 -name '*.yaml' -exec kubeval {} \;
-
-status=$?
-
-if [ "$status" = 0 ] ; then
+if kubeval --strict -d . ; then
     echo "Static analysis found no problems."
     exit 0
 else
