@@ -28,7 +28,7 @@ var (
 	commit                  = "none"
 	date                    = "unknown"
 	directories             = []string{}
-	ignoredFilenamePatterns = []string{}
+	ignoredPathPatterns = []string{}
 
 	// forceColor tells kubeval to use colored output even if
 	// stdout is not a TTY
@@ -175,9 +175,9 @@ func hasErrors(res []kubeval.ValidationResult) bool {
 }
 
 // isIgnored returns whether the specified filename should be ignored.
-func isIgnored(filename string) (bool, error) {
-	for _, p := range ignoredFilenamePatterns {
-		m, err := regexp.MatchString(p, filename)
+func isIgnored(path string) (bool, error) {
+	for _, p := range ignoredPathPatterns {
+		m, err := regexp.MatchString(p, path)
 		if err != nil {
 			return false, err
 		}
@@ -198,7 +198,7 @@ func aggregateFiles(args []string) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			ignored, err := isIgnored(info.Name())
+			ignored, err := isIgnored(path)
 			if err != nil {
 				return err
 			}
@@ -240,8 +240,9 @@ func init() {
 	RootCmd.Flags().BoolVarP(&forceColor, "force-color", "", false, "Force colored output even if stdout is not a TTY")
 	RootCmd.SetVersionTemplate(`{{.Version}}`)
 	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
-	RootCmd.Flags().StringSliceVarP(&ignoredFilenamePatterns, "ignored-filename-patterns", "i", []string{}, "A comma-separated list of regular expressions specifying filenames to ignore")
-
+	RootCmd.Flags().StringSliceVarP(&ignoredPathPatterns, "ignored-path-patterns", "i", []string{}, "A comma-separated list of regular expressions specifying paths to ignore")
+	RootCmd.Flags().StringSliceVarP(&ignoredPathPatterns, "ignored-filename-patterns", "", []string{}, "An alias for ignored-path-patterns")
+	
 	viper.SetEnvPrefix("KUBEVAL")
 	viper.AutomaticEnv()
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))
