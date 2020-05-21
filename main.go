@@ -59,7 +59,7 @@ var RootCmd = &cobra.Command{
 
 		success := true
 		windowsStdinIssue := false
-		outputManager := kubeval.GetOutputManager(config.OutputFormat)
+		outputManager := kubeval.GetOutputManager(config.OutputFormat, config.FailuresOnly)
 
 		stat, err := os.Stdin.Stat()
 		if err != nil {

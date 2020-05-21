@@ -70,6 +70,9 @@ type Config struct {
 	// InsecureSkipTLSVerify controls whether to skip TLS certificate validation
 	// when retrieving schema content over HTTPS
 	InsecureSkipTLSVerify bool
+
+	// Output only those files that do not PASS
+	FailuresOnly bool
 }
 
 // NewDefaultConfig creates a Config with default values
@@ -97,6 +100,7 @@ func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
 	cmd.Flags().StringVarP(&config.OutputFormat, "output", "o", "", fmt.Sprintf("The format of the output of this script. Options are: %v", validOutputs()))
 	cmd.Flags().BoolVar(&config.Quiet, "quiet", false, "Silences any output aside from the direct results")
 	cmd.Flags().BoolVar(&config.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
+	cmd.Flags().BoolVar(&config.FailuresOnly, "failures-only", false, "If true, only files that fail validation will be included in the output.")
 
 	return cmd
 }

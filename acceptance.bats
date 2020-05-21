@@ -177,3 +177,9 @@
   [ "$status" -eq 0 ]
   [[ ${lines[2]} == "  kubectl kubeval <file>"* ]]
 }
+
+@test "Only non-PASS messages are shown with --failures-only" {
+  run bin/kubeval --failures-only fixtures/valid.yaml fixtures/invalid.yaml
+  [ "$status" -eq 1 ]
+  [ "$output" = "WARN - fixtures/invalid.yaml contains an invalid ReplicationController (bob) - spec.replicas: Invalid type. Expected: [integer,null], given: string" ]
+}
