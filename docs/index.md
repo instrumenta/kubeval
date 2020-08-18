@@ -138,6 +138,7 @@ not ok 1 - fixtures/invalid.yaml (ReplicationController) - spec.replicas: Invali
 ## Full usage instructions
 
 ```console
+$ kubeval --help
 Validate a Kubernetes YAML file against the relevant schema
 
 Usage:
