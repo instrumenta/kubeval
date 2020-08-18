@@ -151,6 +151,8 @@ Flags:
       --force-color                 Force colored output even if stdout is not a TTY
   -h, --help                        help for kubeval
       --ignore-missing-schemas      Skip validation for resource definitions without a schema
+      --ignored-path-patterns       A comma-separated list of regular expressions specifying paths to ignore
+      --ignored-filename-patterns   An alias for ignored-path-patterns
   -v, --kubernetes-version string   Version of Kubernetes to validate against (default "master")
       --openshift                   Use OpenShift schemas instead of upstream Kubernetes
   -o, --output string               The format of the output of this script. Options are: [stdout json]
