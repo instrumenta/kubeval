@@ -96,6 +96,8 @@ PASS - chart/templates/primary.yaml contains a valid ReplicationControlle
 
 The output of `kubeval` can be configured using the `--output` flag (`-o`).
 
+If you only want to output files that contain errors use the `--failures-only` flag.
+
 As of today `kubeval` supports the following output types:
 
 - Plaintext `--output=stdout`
@@ -147,6 +149,7 @@ Usage:
 Flags:
   -d, --directories strings         A comma-separated list of directories to recursively search for YAML documents
       --exit-on-error               Immediately stop execution when the first error is encountered
+      --failures-only               If true, only files that fail validation will be included in the output.
   -f, --filename string             filename to be displayed when testing manifests read from stdin (default "stdin")
       --force-color                 Force colored output even if stdout is not a TTY
   -h, --help                        help for kubeval
