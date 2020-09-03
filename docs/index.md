@@ -146,6 +146,7 @@ Usage:
 
 Flags:
   -d, --directories strings         A comma-separated list of directories to recursively search for YAML documents
+      --error-on-validation-failure Log an error if resource fails validation when outputting to stdout
       --exit-on-error               Immediately stop execution when the first error is encountered
   -f, --filename string             filename to be displayed when testing manifests read from stdin (default "stdin")
       --force-color                 Force colored output even if stdout is not a TTY
