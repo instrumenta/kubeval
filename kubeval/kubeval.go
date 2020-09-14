@@ -122,17 +122,19 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 		return result, body, nil
 	}
 
-	name, err := getStringAt(body, []string{"metadata", "name"})
-	if err != nil {
-		return result, body, fmt.Errorf("%s: %s", result.FileName, err.Error())
-	}
-	result.ResourceName = name
+	metadata, _ := getObject(body, "metadata")
+	if metadata != nil {
+		namespace, _ := getString(metadata, "namespace")
+		name, _ := getString(metadata, "name")
+		generateName, _ := getString(metadata, "generateName")
 
-	namespace, err := getStringAt(body, []string{"metadata", "namespace"})
-	if err != nil {
-		result.ResourceNamespace = "default"
+		if len(name) == 0 && len(generateName) > 0 {
+			result.ResourceName = fmt.Sprintf("%s{{ generateName }}", generateName)
+		} else {
+			result.ResourceName = name
+		}
+		result.ResourceNamespace = namespace
 	}
-	result.ResourceNamespace = namespace
 
 	kind, err := getString(body, "kind")
 	if err != nil {
