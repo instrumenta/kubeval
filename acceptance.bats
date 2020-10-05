@@ -48,6 +48,12 @@
   [ "$output" = "PASS - fixtures/null_string.yaml contains a valid Service (frontend)" ]
 }
 
+@test "Pass when parsing a valid Kubernetes config YAML file with generate name" {
+  run bin/kubeval fixtures/generate_name.yaml
+  [ "$status" -eq 0 ]
+  [ "$output" = "PASS - fixtures/generate_name.yaml contains a valid Job (pi-{{ generateName }})" ]
+}
+
 @test "Pass when parsing a multi-document config file" {
   run bin/kubeval fixtures/multi_valid.yaml
   [ "$status" -eq 0 ]
