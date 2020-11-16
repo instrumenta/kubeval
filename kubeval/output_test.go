@@ -165,6 +165,21 @@ not ok 1 - service.yaml (Service) - error: i am a error
 not ok 2 - service.yaml (Service) - error: i am another error
 `,
 		},
+		{
+			msg: "file with no errors because of a skip",
+			args: args{
+				vr: ValidationResult{
+					FileName:               "deployment.yaml",
+					Kind:                   "Deployment",
+					ValidatedAgainstSchema: true,
+					Errors:                 nil,
+				},
+			},
+			exp: `1..2
+ok 1 - validate.yaml (Validation) # SKIP
+ok 2 - deployment.yaml (Deployment)
+`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.msg, func(t *testing.T) {
