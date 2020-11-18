@@ -223,7 +223,7 @@ func (j *tapOutputManager) Flush() error {
 			if r.Status == "valid" {
 				j.logger.Print("ok ", count, " - ", r.Filename, kindMarker)
 			} else if r.Status == "skipped" {
-				j.logger.Print("ok ", count, " #skip - ", r.Filename, kindMarker)
+				j.logger.Print("ok ", count, " - ", r.Filename, kindMarker, " # SKIP")
 			} else if r.Status == "invalid" {
 				for _, e := range r.Errors {
 					j.logger.Print("not ok ", count, " - ", r.Filename, kindMarker, " - ", e)
