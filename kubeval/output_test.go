@@ -171,13 +171,12 @@ not ok 2 - service.yaml (Service) - error: i am another error
 				vr: ValidationResult{
 					FileName:               "deployment.yaml",
 					Kind:                   "Deployment",
-					ValidatedAgainstSchema: true,
+					ValidatedAgainstSchema: false,
 					Errors:                 nil,
 				},
 			},
-			exp: `1..2
-ok 1 - validate.yaml (Validation) # SKIP
-ok 2 - deployment.yaml (Deployment)
+			exp: `1..1
+ok 1 - deployment.yaml (Deployment) # SKIP
 `,
 		},
 	}
