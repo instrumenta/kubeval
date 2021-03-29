@@ -225,9 +225,13 @@ func (j *tapOutputManager) Flush() error {
 			} else if r.Status == "skipped" {
 				j.logger.Print("ok ", count, " - ", r.Filename, kindMarker, " # SKIP")
 			} else if r.Status == "invalid" {
-				for _, e := range r.Errors {
+				for i, e := range r.Errors {
 					j.logger.Print("not ok ", count, " - ", r.Filename, kindMarker, " - ", e)
-					count = count + 1
+
+					// We have to skip adding 1 if it's the last error
+					if len(r.Errors) != i+1 {
+						count = count + 1
+					}
 				}
 			}
 		}
