@@ -8,7 +8,7 @@ be useful in getting started.
 For building Kubeval you'll need the following:
 
 * Make
-* Go 1.12
+* Go 1.15
 
 For releasing Kubeval you'll also need:
 
