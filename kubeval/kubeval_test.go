@@ -11,6 +11,27 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+var validTestFiles = []string{
+	"blank.yaml",
+	"comment.yaml",
+	"valid.yaml",
+	"valid.json",
+	"generate_name.yaml",
+	"multi_valid.yaml",
+	"int_or_string.yaml",
+	"null_array.yaml",
+	"quantity.yaml",
+	"extra_property.yaml",
+	"full_domain_group.yaml",
+	"unconventional_keys.yaml",
+	"list_valid.yaml",
+	"list_empty_valid.yaml",
+	"same-object-different-namespace.yaml",
+	"same-object-different-namespace-default.yaml",
+	"duplicates-skipped-kinds.yaml",
+	"same-kind-different-api.yaml",
+}
+
 func TestValidateBlankInput(t *testing.T) {
 	blank := []byte("")
 	config := NewDefaultConfig()
@@ -22,26 +43,7 @@ func TestValidateBlankInput(t *testing.T) {
 }
 
 func TestValidateValidInputs(t *testing.T) {
-	var tests = []string{
-		"blank.yaml",
-		"comment.yaml",
-		"valid.yaml",
-		"valid.json",
-		"generate_name.yaml",
-		"multi_valid.yaml",
-		"int_or_string.yaml",
-		"null_array.yaml",
-		"quantity.yaml",
-		"extra_property.yaml",
-		"full_domain_group.yaml",
-		"unconventional_keys.yaml",
-		"list_valid.yaml",
-		"list_empty_valid.yaml",
-		"same-object-different-namespace.yaml",
-		"same-object-different-namespace-default.yaml",
-		"duplicates-skipped-kinds.yaml",
-		"same-kind-different-api.yaml",
-	}
+	var tests = validTestFiles
 	for _, test := range tests {
 		filePath, _ := filepath.Abs("../fixtures/" + test)
 		fileContents, _ := ioutil.ReadFile(filePath)
@@ -57,24 +59,7 @@ func TestValidateValidInputs(t *testing.T) {
 }
 
 func TestValidateValidInputsWithCache(t *testing.T) {
-	var tests = []string{
-		"blank.yaml",
-		"comment.yaml",
-		"valid.yaml",
-		"valid.json",
-		"generate_name.yaml",
-		"multi_valid.yaml",
-		"int_or_string.yaml",
-		"null_array.yaml",
-		"quantity.yaml",
-		"extra_property.yaml",
-		"full_domain_group.yaml",
-		"unconventional_keys.yaml",
-		"list_valid.yaml",
-		"same-object-different-namespace.yaml",
-		"same-object-different-namespace-default.yaml",
-		"duplicates-skipped-kinds.yaml",
-	}
+	var tests = validTestFiles
 	schemaCache := make(map[string]*gojsonschema.Schema, 0)
 
 	for _, test := range tests {
