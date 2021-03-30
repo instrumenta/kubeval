@@ -36,6 +36,7 @@ func TestValidateValidInputs(t *testing.T) {
 		"full_domain_group.yaml",
 		"unconventional_keys.yaml",
 		"list_valid.yaml",
+		"list_empty_valid.yaml",
 		"same-object-different-namespace.yaml",
 		"same-object-different-namespace-default.yaml",
 		"duplicates-skipped-kinds.yaml",
