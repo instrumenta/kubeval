@@ -277,24 +277,34 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 		return results, nil
 	}
 
-	list := struct {
-		Version string
-		Kind    string
-		Items   []interface{}
-	}{}
+	splitBits := bytes.Split(input, []byte(detectLineBreak(input)+"---"+detectLineBreak(input)))
+	bits := make([][]byte, len(splitBits))
+	j := 0
 
-	unmarshalErr := yaml.Unmarshal(input, &list)
-	isYamlList := unmarshalErr == nil && list.Items != nil
+	// split any list into its elements and add them to "bits"
+	for _, element := range splitBits {
 
-	var bits [][]byte
-	if isYamlList {
-		bits = make([][]byte, len(list.Items))
-		for i, item := range list.Items {
-			b, _ := yaml.Marshal(item)
-			bits[i] = b
+		list := struct {
+			Version string
+			Kind    string
+			Items   []interface{}
+		}{}
+
+		unmarshalErr := yaml.Unmarshal(element, &list)
+		isYamlList := unmarshalErr == nil && list.Items != nil
+
+		if isYamlList {
+			listBits := make([][]byte, len(list.Items))
+			for i, item := range list.Items {
+				b, _ := yaml.Marshal(item)
+				listBits[i] = b
+			}
+			bits = append(bits, listBits...)
+			j += len(list.Items)
+		} else {
+			bits[j] = element
+			j++
 		}
-	} else {
-		bits = bytes.Split(input, []byte(detectLineBreak(input)+"---"+detectLineBreak(input)))
 	}
 
 	var errors *multierror.Error
