@@ -179,3 +179,10 @@ spec:
 ---
 # an empty resource with comments
 ---
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: b
