@@ -24,8 +24,12 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+release:
+  github:
+    owner: instrumenta
+    name: kubeval
 brews:
-- github:
+- tap:
     owner: instrumenta
     name: homebrew-instrumenta
   folder: Formula
