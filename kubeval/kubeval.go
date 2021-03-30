@@ -284,7 +284,7 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 	}{}
 
 	unmarshalErr := yaml.Unmarshal(input, &list)
-	isYamlList := unmarshalErr == nil && list.Items != nil && len(list.Items) > 0
+	isYamlList := unmarshalErr == nil && list.Items != nil
 
 	var bits [][]byte
 	if isYamlList {
