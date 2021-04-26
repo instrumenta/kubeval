@@ -28,3 +28,20 @@ else
     exit 1
 fi
 ```
+
+## GitLab in container
+
+Below code fragment is basic example useful to verify files under `k8s/` subdirectory.
+Adjust `stage` and subdirectory (`k8s/`) in `find` command accordingly to your project spec.
+
+```yaml
+kubeval:
+  stage: lint
+  image:
+    name: garethr/kubeval
+    # force empty entrypoint, otherwise you will get
+    # err - unknown shorthand flag: 'c' in -c
+    entrypoint: [""]
+  script:
+    - find k8s/ -type f -name "*.yaml" -exec kubeval {} \; ;
+```
