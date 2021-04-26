@@ -27,7 +27,7 @@ For those using [Homebrew](https://brew.sh/) you can use the kubeval tap:
 
 ```
 brew tap instrumenta/instrumenta
-brew install kubeval
+brew install instrumenta/instrumenta/kubeval
 ```
 
 ## Windows
