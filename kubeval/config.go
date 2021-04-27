@@ -45,6 +45,10 @@ type Config struct {
 	// for resource definitions without an available schema
 	IgnoreMissingSchemas bool
 
+	// ErrorOnValidationFailure tells kubeval whether to produce an error instead
+	// of a warning when a resource fails to validate when using STDOUT
+	ErrorOnValidationFailure bool
+
 	// ExitOnError tells kubeval whether to halt processing upon the
 	// first error encountered or to continue, aggregating all errors
 	ExitOnError bool
@@ -84,6 +88,7 @@ func NewDefaultConfig() *Config {
 // AddKubevalFlags adds the default flags for kubeval to cmd
 func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
 	cmd.Flags().StringVarP(&config.DefaultNamespace, "default-namespace", "n", "default", "Namespace to assume in resources if no namespace is set in metadata:namespace")
+	cmd.Flags().BoolVar(&config.ErrorOnValidationFailure, "error-on-validation-failure", false, "Log an error if resource fails validation when outputting to stdout")
 	cmd.Flags().BoolVar(&config.ExitOnError, "exit-on-error", false, "Immediately stop execution when the first error is encountered")
 	cmd.Flags().BoolVar(&config.IgnoreMissingSchemas, "ignore-missing-schemas", false, "Skip validation for resource definitions without a schema")
 	cmd.Flags().BoolVar(&config.OpenShift, "openshift", false, "Use OpenShift schemas instead of upstream Kubernetes")

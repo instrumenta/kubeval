@@ -24,10 +24,10 @@ import (
 )
 
 var (
-	version                 = "dev"
-	commit                  = "none"
-	date                    = "unknown"
-	directories             = []string{}
+	version             = "dev"
+	commit              = "none"
+	date                = "unknown"
+	directories         = []string{}
 	ignoredPathPatterns = []string{}
 
 	// forceColor tells kubeval to use colored output even if
@@ -59,7 +59,7 @@ var RootCmd = &cobra.Command{
 
 		success := true
 		windowsStdinIssue := false
-		outputManager := kubeval.GetOutputManager(config.OutputFormat)
+		outputManager := kubeval.GetOutputManager(config.OutputFormat, config.ErrorOnValidationFailure)
 
 		stat, err := os.Stdin.Stat()
 		if err != nil {
@@ -242,7 +242,7 @@ func init() {
 	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
 	RootCmd.Flags().StringSliceVarP(&ignoredPathPatterns, "ignored-path-patterns", "i", []string{}, "A comma-separated list of regular expressions specifying paths to ignore")
 	RootCmd.Flags().StringSliceVarP(&ignoredPathPatterns, "ignored-filename-patterns", "", []string{}, "An alias for ignored-path-patterns")
-	
+
 	viper.SetEnvPrefix("KUBEVAL")
 	viper.AutomaticEnv()
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))

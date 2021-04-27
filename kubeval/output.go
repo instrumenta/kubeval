@@ -36,31 +36,38 @@ func validOutputs() []string {
 	}
 }
 
-func GetOutputManager(outFmt string) outputManager {
+func GetOutputManager(outFmt string, strictValidation bool) outputManager {
 	switch outFmt {
 	case outputSTD:
-		return newSTDOutputManager()
+		return newSTDOutputManager(strictValidation)
 	case outputJSON:
 		return newDefaultJSONOutputManager()
 	case outputTAP:
 		return newDefaultTAPOutputManager()
 	default:
-		return newSTDOutputManager()
+		return newSTDOutputManager(strictValidation)
 	}
 }
 
 // STDOutputManager reports `kubeval` results to stdout.
 type STDOutputManager struct {
+	strictValidation bool
 }
 
 // newSTDOutputManager instantiates a new instance of STDOutputManager.
-func newSTDOutputManager() *STDOutputManager {
-	return &STDOutputManager{}
+func newSTDOutputManager(strictValidation bool) *STDOutputManager {
+	return &STDOutputManager{
+		strictValidation: strictValidation,
+	}
 }
 
 func (s *STDOutputManager) Put(result ValidationResult) error {
 	if len(result.Errors) > 0 {
 		for _, desc := range result.Errors {
+			if s.strictValidation {
+				err := fmt.Errorf("%s contains an invalid %s %s - %s", result.FileName, result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), desc.String())
+				return err
+			}
 			kLog.Warn(result.FileName, "contains an invalid", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), "-", desc.String())
 		}
 	} else if result.Kind == "" {
