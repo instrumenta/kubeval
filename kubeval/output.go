@@ -26,6 +26,10 @@ const (
 	outputSTD  = "stdout"
 	outputJSON = "json"
 	outputTAP  = "tap"
+
+	levelINFO    = "info"
+	levelSUCCESS = "success"
+	levelWARN    = "warn"
 )
 
 func validOutputs() []string {
@@ -36,26 +40,35 @@ func validOutputs() []string {
 	}
 }
 
-func GetOutputManager(outFmt string) outputManager {
+func validLevels() []string {
+	return []string{
+		levelINFO,
+		levelSUCCESS,
+		levelWARN,
+	}
+}
+
+func GetOutputManager(outFmt, loggingLevel string) outputManager {
 	switch outFmt {
 	case outputSTD:
-		return newSTDOutputManager()
+		return newSTDOutputManager(loggingLevel)
 	case outputJSON:
 		return newDefaultJSONOutputManager()
 	case outputTAP:
 		return newDefaultTAPOutputManager()
 	default:
-		return newSTDOutputManager()
+		return newSTDOutputManager(loggingLevel)
 	}
 }
 
 // STDOutputManager reports `kubeval` results to stdout.
 type STDOutputManager struct {
+	loggingLevel string
 }
 
 // newSTDOutputManager instantiates a new instance of STDOutputManager.
-func newSTDOutputManager() *STDOutputManager {
-	return &STDOutputManager{}
+func newSTDOutputManager(loggingLevel string) *STDOutputManager {
+	return &STDOutputManager{loggingLevel: loggingLevel}
 }
 
 func (s *STDOutputManager) Put(result ValidationResult) error {
@@ -64,11 +77,17 @@ func (s *STDOutputManager) Put(result ValidationResult) error {
 			kLog.Warn(result.FileName, "contains an invalid", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), "-", desc.String())
 		}
 	} else if result.Kind == "" {
-		kLog.Success(result.FileName, "contains an empty YAML document")
+		if s.loggingLevel != levelWARN {
+			kLog.Success(result.FileName, "contains an empty YAML document")
+		}
 	} else if !result.ValidatedAgainstSchema {
-		kLog.Info(result.FileName, "containing a", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), "was not validated against a schema")
+		if s.loggingLevel != levelWARN && s.loggingLevel != levelSUCCESS {
+			kLog.Info(result.FileName, "containing a", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), "was not validated against a schema")
+		}
 	} else {
-		kLog.Success(result.FileName, "contains a valid", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()))
+		if s.loggingLevel != levelWARN {
+			kLog.Success(result.FileName, "contains a valid", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()))
+		}
 	}
 
 	return nil

@@ -63,6 +63,9 @@ type Config struct {
 	// reporting results to the user.
 	OutputFormat string
 
+	// LoggingLevel configures the logging level for whether we should log output when using the human layout
+	LoggingLevel string
+
 	// Quiet indicates whether non-results output should be emitted to the applications
 	// log.
 	Quiet bool
@@ -95,6 +98,7 @@ func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
 	cmd.Flags().StringSliceVar(&config.AdditionalSchemaLocations, "additional-schema-locations", []string{}, "Comma-seperated list of secondary base URLs used to download schemas")
 	cmd.Flags().StringVarP(&config.KubernetesVersion, "kubernetes-version", "v", "master", "Version of Kubernetes to validate against")
 	cmd.Flags().StringVarP(&config.OutputFormat, "output", "o", "", fmt.Sprintf("The format of the output of this script. Options are: %v", validOutputs()))
+	cmd.Flags().StringVarP(&config.LoggingLevel, "log-level", "", "", fmt.Sprintf("The logging level for whether to log all levels or just warnings. Options are: %v", validLevels()))
 	cmd.Flags().BoolVar(&config.Quiet, "quiet", false, "Silences any output aside from the direct results")
 	cmd.Flags().BoolVar(&config.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 
