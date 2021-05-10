@@ -66,7 +66,7 @@ func (s *STDOutputManager) Put(result ValidationResult) error {
 	} else if result.Kind == "" {
 		kLog.Success(result.FileName, "contains an empty YAML document")
 	} else if !result.ValidatedAgainstSchema {
-		kLog.Warn(result.FileName, "containing a", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), "was not validated against a schema")
+		kLog.Info(result.FileName, "containing a", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), "was not validated against a schema")
 	} else {
 		kLog.Success(result.FileName, "contains a valid", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()))
 	}
