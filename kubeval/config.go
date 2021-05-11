@@ -70,6 +70,10 @@ type Config struct {
 	// log.
 	Quiet bool
 
+	// IgnoreHelmSource if enabled we don't replace the file name used in errors reported with
+	// the contents of the `# Source` comment file name
+	IgnoreHelmSource bool
+
 	// InsecureSkipTLSVerify controls whether to skip TLS certificate validation
 	// when retrieving schema content over HTTPS
 	InsecureSkipTLSVerify bool
@@ -100,6 +104,7 @@ func AddKubevalFlags(cmd *cobra.Command, config *Config) *cobra.Command {
 	cmd.Flags().StringVarP(&config.OutputFormat, "output", "o", "", fmt.Sprintf("The format of the output of this script. Options are: %v", validOutputs()))
 	cmd.Flags().StringVarP(&config.LoggingLevel, "log-level", "", "", fmt.Sprintf("The logging level for whether to log all levels or just warnings. Options are: %v", validLevels()))
 	cmd.Flags().BoolVar(&config.Quiet, "quiet", false, "Silences any output aside from the direct results")
+	cmd.Flags().BoolVar(&config.IgnoreHelmSource, "ignore-helm-source", false, "If enabled we preserve the file name for errors rather than replace it with the contents of the '# Source' comment in the generated helm resource")
 	cmd.Flags().BoolVar(&config.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false, "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 
 	return cmd
