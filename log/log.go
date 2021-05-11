@@ -13,6 +13,11 @@ func Success(message ...string) {
 	fmt.Printf("%s - %v\n", green("PASS"), strings.Join(message, " "))
 }
 
+func Info(message ...string) {
+	blue := color.New(color.FgBlue).SprintFunc()
+	fmt.Printf("%s - %v\n", blue("PASS"), strings.Join(message, " "))
+}
+
 func Warn(message ...string) {
 	yellow := color.New(color.FgYellow).SprintFunc()
 	fmt.Printf("%s - %v\n", yellow("WARN"), strings.Join(message, " "))

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -322,10 +323,27 @@ func ValidateWithCache(input []byte, schemaCache map[string]*gojsonschema.Schema
 
 	seenResourcesSet := make(map[[4]string]bool) // set of [API version, kind, namespace, name]
 
+	if config.IgnoreHelmSource {
+		// lets try use a relative file name to the current dir
+		dir, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		rel, err := filepath.Rel(dir, config.FileName)
+		if err == nil && rel != "" {
+			names := strings.Split(rel, string(os.PathSeparator))
+			if names[0] != ".." {
+				config.FileName = rel
+			}
+		}
+	}
+
 	for _, element := range bits {
 		if len(element) > 0 {
-			if found := helmSourcePattern.FindStringSubmatch(string(element)); found != nil {
-				config.FileName = found[1]
+			if !config.IgnoreHelmSource {
+				if found := helmSourcePattern.FindStringSubmatch(string(element)); found != nil {
+					config.FileName = found[1]
+				}
 			}
 
 			result, body, err := validateResource(element, schemaCache, config)
