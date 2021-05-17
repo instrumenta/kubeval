@@ -3,7 +3,7 @@ module github.com/instrumenta/kubeval
 go 1.15
 
 require (
-	github.com/fatih/color v1.10.0
+	github.com/fatih/color v1.11.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/spf13/cobra v0.0.0-20180820174524-ff0d02e85550
