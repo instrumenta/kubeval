@@ -66,9 +66,17 @@ func determineSchemaURL(baseURL, kind, apiVersion string, config *Config) string
 	if config.Strict {
 		strictSuffix = "-strict"
 	}
-
-	if config.OpenShift {
-		// If we're using the openshift schemas, there's no further processing required
+        
+        if config.OpenShift {
+        	if len(strings.Split(apiVersion, "/")) > 1 {
+			groupParts := strings.Split(apiVersion, "/")
+			versionParts := strings.Split(groupParts[0], ".")
+			kindSuffix := "-" + strings.ToLower(versionParts[0])
+			if len(groupParts) > 1 {
+				kindSuffix += "-" + strings.ToLower(groupParts[1])
+			}
+			return fmt.Sprintf("%s/%s-standalone%s/%s%s.json", baseURL, normalisedVersion, strictSuffix, strings.ToLower(kind), kindSuffix)
+		}
 		return fmt.Sprintf("%s/%s-standalone%s/%s.json", baseURL, normalisedVersion, strictSuffix, strings.ToLower(kind))
 	}
 
