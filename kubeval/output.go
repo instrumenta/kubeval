@@ -26,6 +26,7 @@ const (
 	outputSTD  = "stdout"
 	outputJSON = "json"
 	outputTAP  = "tap"
+	outputJunit = "junit"
 )
 
 func validOutputs() []string {
@@ -33,6 +34,7 @@ func validOutputs() []string {
 		outputSTD,
 		outputJSON,
 		outputTAP,
+		outputJunit,
 	}
 }
 
@@ -44,6 +46,8 @@ func GetOutputManager(outFmt string) outputManager {
 		return newDefaultJSONOutputManager()
 	case outputTAP:
 		return newDefaultTAPOutputManager()
+	case outputJunit:
+		return newDefaultJunitOutputManager()
 	default:
 		return newSTDOutputManager()
 	}
@@ -237,4 +241,12 @@ func (j *tapOutputManager) Flush() error {
 		}
 	}
 	return nil
+}
+
+func newDefaultJunitOutputManager() outputManager {
+	return newJunitOutputManager(log.New(os.Stdout, "", 0))
+}
+
+func newJunitOutputManager(l *log.Logger) outputManager {
+	return junitOutput(os.Stdout, true, false, false)
 }

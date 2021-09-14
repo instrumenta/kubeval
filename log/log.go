@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/fatih/color"
@@ -25,6 +26,6 @@ func Error(message error) {
 		}
 	} else {
 		red := color.New(color.FgRed).SprintFunc()
-		fmt.Printf("%s - %v\n", red("ERR "), message)
+		fmt.Fprintf(os.Stderr, "%s - %v\n", red("ERR "), message)
 	}
 }
