@@ -138,13 +138,13 @@ func validateResource(data []byte, schemaCache map[string]*gojsonschema.Schema, 
 
 	kind, err := getString(body, "kind")
 	if err != nil {
-		return result, body, fmt.Errorf("%s: %s", result.FileName, err.Error())
+		return result, body, fmt.Errorf(err.Error())
 	}
 	result.Kind = kind
 
 	apiVersion, err := getString(body, "apiVersion")
 	if err != nil {
-		return result, body, fmt.Errorf("%s: %s", result.FileName, err.Error())
+		return result, body, fmt.Errorf(err.Error())
 	}
 	result.APIVersion = apiVersion
 

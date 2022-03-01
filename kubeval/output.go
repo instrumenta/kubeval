@@ -19,6 +19,7 @@ import (
 // this package.
 type outputManager interface {
 	Put(r ValidationResult) error
+	PutValidateError(err error, cfg Config) error
 	Flush() error
 }
 
@@ -71,6 +72,11 @@ func (s *STDOutputManager) Put(result ValidationResult) error {
 		kLog.Success(result.FileName, "contains a valid", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()))
 	}
 
+	return nil
+}
+
+func (s *STDOutputManager) PutValidateError(err error, cfg Config) error {
+	kLog.Error(err)
 	return nil
 }
 
@@ -146,6 +152,17 @@ func (j *jsonOutputManager) Put(r ValidationResult) error {
 	return nil
 }
 
+func (j *jsonOutputManager) PutValidateError(err error, cfg Config) error {
+	errs := make([]string, 0, 1)
+	errs = append(errs, err.Error())
+	j.data = append(j.data, dataEvalResult{
+		Filename: cfg.FileName,
+		Status:   statusInvalid,
+		Errors:   errs,
+	})
+	return nil
+}
+
 func (j *jsonOutputManager) Flush() error {
 	b, err := json.Marshal(j.data)
 	if err != nil {
@@ -195,7 +212,17 @@ func (j *tapOutputManager) Put(r ValidationResult) error {
 		Status:   getStatus(r),
 		Errors:   errs,
 	})
+	return nil
+}
 
+func (j *tapOutputManager) PutValidateError(err error, cfg Config) error {
+	errs := make([]string, 0, 1)
+	errs = append(errs, err.Error())
+	j.data = append(j.data, dataEvalResult{
+		Filename: cfg.FileName,
+		Status:   statusInvalid,
+		Errors:   errs,
+	})
 	return nil
 }
 

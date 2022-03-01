@@ -129,7 +129,10 @@ var RootCmd = &cobra.Command{
 				config.FileName = fileName
 				results, err := kubeval.ValidateWithCache(fileContents, schemaCache, config)
 				if err != nil {
-					log.Error(err)
+					err := outputManager.PutValidateError(err, *config)
+					if err != nil {
+						log.Error(err)
+					}
 					earlyExit()
 					success = false
 					continue
@@ -242,7 +245,7 @@ func init() {
 	RootCmd.Flags().StringSliceVarP(&directories, "directories", "d", []string{}, "A comma-separated list of directories to recursively search for YAML documents")
 	RootCmd.Flags().StringSliceVarP(&ignoredPathPatterns, "ignored-path-patterns", "i", []string{}, "A comma-separated list of regular expressions specifying paths to ignore")
 	RootCmd.Flags().StringSliceVarP(&ignoredPathPatterns, "ignored-filename-patterns", "", []string{}, "An alias for ignored-path-patterns")
-	
+
 	viper.SetEnvPrefix("KUBEVAL")
 	viper.AutomaticEnv()
 	viper.BindPFlag("schema_location", RootCmd.Flags().Lookup("schema-location"))

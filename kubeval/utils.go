@@ -51,14 +51,14 @@ func getStringAt(body map[string]interface{}, path []string) (string, error) {
 func getString(body map[string]interface{}, key string) (string, error) {
 	value, found := body[key]
 	if !found {
-		return "", fmt.Errorf("Missing '%s' key", key)
+		return "", fmt.Errorf("%s: %s key is required", key, key)
 	}
 	if value == nil {
-		return "", fmt.Errorf("Missing '%s' value", key)
+		return "", fmt.Errorf("%s: %s is missing a value", key, key)
 	}
 	typedValue, ok := value.(string)
 	if !ok {
-		return "", fmt.Errorf("Expected string value for key '%s'", key)
+		return "", fmt.Errorf("%s: %s must have a string value", key, key)
 	}
 	return typedValue, nil
 }
