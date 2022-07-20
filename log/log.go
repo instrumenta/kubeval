@@ -18,6 +18,11 @@ func Warn(message ...string) {
 	fmt.Printf("%s - %v\n", yellow("WARN"), strings.Join(message, " "))
 }
 
+func Error(message ...string) {
+	red := color.New(color.FgRed).SprintFunc()
+	fmt.Printf("%s - %v\n", yellow("ERR "), strings.Join(message, " "))
+}
+
 func Error(message error) {
 	if merr, ok := message.(*multierror.Error); ok {
 		for _, serr := range merr.Errors {
