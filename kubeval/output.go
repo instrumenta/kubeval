@@ -61,7 +61,7 @@ func newSTDOutputManager() *STDOutputManager {
 func (s *STDOutputManager) Put(result ValidationResult) error {
 	if len(result.Errors) > 0 {
 		for _, desc := range result.Errors {
-			kLog.Warn(result.FileName, "contains an invalid", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), "-", desc.String())
+			kLog.Error(result.FileName, "contains an invalid", result.Kind, fmt.Sprintf("(%s)", result.QualifiedName()), "-", desc.String())
 		}
 	} else if result.Kind == "" {
 		kLog.Success(result.FileName, "contains an empty YAML document")
