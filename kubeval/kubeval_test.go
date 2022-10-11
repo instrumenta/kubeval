@@ -280,6 +280,13 @@ func TestDetermineSchemaURL(t *testing.T) {
 			version:  "v1",
 			expected: "https://base/master-standalone/sample.json",
 		},
+		{
+			config:   &Config{KubernetesVersion: "3.11.0", OpenShift: true, Strict: true},
+			baseURL:  "https://base",
+			kind:     "sample",
+			version:  "autoscaling/v2beta1",
+			expected: "https://base/v3.11.0-standalone-strict/sample-autoscaling-v2beta1.json",
+		},
 	}
 	for _, test := range tests {
 		schemaURL := determineSchemaURL(test.baseURL, test.kind, test.version, test.config)
