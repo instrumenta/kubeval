@@ -1,5 +1,8 @@
 # Kubeval
 
+**NOTE: This project is [no longer maintained](https://github.com/instrumenta/kubeval/issues/268#issuecomment-902128481), a good replacement is [kubeconform](https://github.com/yannh/kubeconform)**
+
+
 `kubeval` is a tool for validating a Kubernetes YAML or JSON configuration file.
 It does so using schemas generated from the Kubernetes OpenAPI specification, and
 therefore can validate schemas for multiple versions of Kubernetes.
