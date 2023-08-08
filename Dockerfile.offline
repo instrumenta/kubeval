@@ -4,7 +4,7 @@ WORKDIR /
 COPY . /
 RUN make build
 
-FROM alpine:latest as schemas
+FROM alpine:3.18.3 as schemas
 RUN apk --no-cache add git
 RUN git clone --depth 1 https://github.com/instrumenta/kubernetes-json-schema.git
 RUN git clone --depth 1 https://github.com/garethr/openshift-json-schema.git
@@ -13,7 +13,7 @@ FROM schemas as standalone-schemas
 RUN cd kubernetes-json-schema/master && \
     find -maxdepth 1 -type d -not -name "." -not -name "*-standalone*" | xargs rm -rf
 
-FROM alpine:latest
+FROM alpine:3.18.3
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /bin/kubeval .
 COPY --from=standalone-schemas /kubernetes-json-schema /schemas/kubernetes-json-schema/master
