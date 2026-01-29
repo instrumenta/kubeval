@@ -4,7 +4,7 @@ WORKDIR /
 COPY . /
 RUN make build
 
-FROM alpine:latest
+FROM alpine:3.23.3
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /bin/kubeval .
 RUN ln -s /kubeval /usr/local/bin/kubeval
